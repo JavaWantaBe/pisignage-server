@@ -29,7 +29,7 @@ exports.index = function (req, res) {
     var criteria = {};
 
     if (req.query['string']) {
-        var str = new RegExp(req.query['string'], "i")
+        var str = new RegExp(req.query['string'], "i");
         criteria['name'] = str;
     }
     //criteria['mode'] = req.query('mode') || null;
@@ -54,12 +54,12 @@ exports.index = function (req, res) {
 exports.getObject = function (req, res) {
 
     var object = req.object;
+
     if (object) {
         return rest.sendSuccess(res, 'Label details', object);
     } else {
         return rest.sendError(res, 'Unable to retrieve Label details', err);
     }
-
 };
 
 exports.createObject = function (req, res) {
@@ -75,7 +75,7 @@ exports.createObject = function (req, res) {
         } else {
             return rest.sendSuccess(res, 'new Label added successfully', data);
         }
-    })
+    });
 }
 
 exports.updateObject = function (req, res) {
@@ -98,5 +98,5 @@ exports.deleteObject = function (req, res) {
             return rest.sendError(res, 'Unable to remove Label', err);
         else
             return rest.sendSuccess(res, 'Label deleted successfully');
-    })
+    });
 }

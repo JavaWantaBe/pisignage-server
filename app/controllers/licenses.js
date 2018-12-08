@@ -14,18 +14,19 @@ var mongoose = require('mongoose'),
     Settings = mongoose.model('Settings'),
     settingsModel = null;
 
-var licenseDir = config.licenseDirPath
+var licenseDir = config.licenseDirPath;
 
 var getTxtFiles = function(cb){
     var txtOnly;
+
     fs.readdir(licenseDir,function(err,files){
         if(err)
             return cb(err,null);
         txtOnly = files.filter(function(file){
-            return file.match(/\.txt$/i)  // remove dot, hidden system files
+            return file.match(/\.txt$/i);  // remove dot, hidden system files
         });
         cb(null,txtOnly);
-    })
+    });
 }
 
 exports.index = function(req,res){
@@ -35,12 +36,11 @@ exports.index = function(req,res){
             return rest.sendError(res,'error in reading license directory',err);
 
         return rest.sendSuccess(res,'total license list ',files);
-    })
+    });
 };
 
 exports.saveLicense = function(req,res){ // save license files
-	var uploadedFiles = req.files["assets"],
-		savedFiles = [];
+	var uploadedFiles = req.files["assets"], savedFiles = [];
 		
 	async.each(uploadedFiles,function(file,callback){
 		fs.rename(file.path,path.join(licenseDir, file.originalname),function(err){
@@ -53,7 +53,7 @@ exports.saveLicense = function(req,res){ // save license files
 		if(err)
 			return rest.sendError(res,'Error in saving license ',err);
 		return rest.sendSuccess(res,'License saved successfuly',savedFiles);
-	})
+	});
 };
 
 
@@ -69,7 +69,7 @@ exports.deleteLicense = function(req,res){ // delete particular license and retu
 
 			return rest.sendSuccess(res,"License "+req.params['filename']+" deleted successfuly",files);
 		});
-	})
+	});
 }
 
 exports.getSettingsModel = function(cb) {
@@ -84,7 +84,7 @@ exports.getSettingsModel = function(cb) {
         } else {
             cb(null,settings);
         }
-    })
+    });
 }
 
 exports.getSettings = function(req,res) {
@@ -96,11 +96,12 @@ exports.getSettings = function(req,res) {
             obj.serverIp = serverIp;
             return rest.sendSuccess(res, 'Settings', obj);
         }
-    })
+    });
 }
 
 exports.updateSettings = function(req,res) {
     var restart;
+
     Settings.findOne(function (err, settings) {
         if (err)
             return rest.sendError(res, 'Unable to update Settings', err);
@@ -123,10 +124,10 @@ exports.updateSettings = function(req,res) {
                 process.exit(0);
             }
         });
-    })
+    });
 }
 
 exports.getSettingsModel(function(err,settings){
-    licenseDir = config.licenseDirPath+(settings.installation || "local")
-})
+    licenseDir = config.licenseDirPath+(settings.installation || "local");
+});
 

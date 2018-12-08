@@ -36,7 +36,7 @@ var readVersions = function() {
 readVersions();
 
 fs.mkdir(config.logStoreDir, function(err) {
-    if (err && (err.code != 'EEXIST')) {
+    if (err && (err.code !== 'EEXIST')) {
         console.log("Error creating logs directory, "+err.code)
     }
 });
@@ -48,7 +48,7 @@ Player.update({"isConnected": true},{$set:{"isConnected": false}},{ multi: true 
     if (!err && num)
         console.log("Reset isConnected for "+num.nModified+" players");
     checkPlayersWatchdog();
-})
+});
 
 var defaultGroup = {_id: 0, name: 'default'};
 //create a default group if does not exist
@@ -59,13 +59,13 @@ licenses.getSettingsModel(function(err,data){
     Group.update({name:"default"},{name:"default",description:"Default group for Players"},{upsert:true},function(err){
         fs.mkdir(path.join(config.syncDir,installation), function (err) {
             fs.mkdir(path.join(config.syncDir,installation, "default"), function (err) {
-            })
+            });
         })
         Group.findOne({name: 'default'}, function (err, data) {
             if (!err && data)
                 defaultGroup = data;
         });
-    })
+    });
 })
 
 
@@ -81,7 +81,7 @@ function checkPlayersWatchdog() {
                 }
                 delete activePlayers[playerId];
                 cb();
-            })
+            });
         } else {
             activePlayers[playerId] = false;
             cb();
@@ -89,7 +89,7 @@ function checkPlayersWatchdog() {
     }, function (err) {
         readVersions() //update version of software
         setTimeout(checkPlayersWatchdog, 600000);    //cleanup every 10 minutes
-    })
+    });
 }
 
 exports.updateDisconnectEvent = function(socketId, reason) {
@@ -102,7 +102,7 @@ exports.updateDisconnectEvent = function(socketId, reason) {
         } else {
             //console.log("not able to find player for disconnect event: "+socketId);
         }
-    })
+    });
 }
 
 var sendConfig = function (player, group, periodic) {
@@ -154,7 +154,7 @@ var sendConfig = function (player, group, periodic) {
     retObj.sleep = group.sleep || {enable: false, ontime: null , offtime: null };
     retObj.reboot = group.reboot || {enable: false, time: null };
     retObj.signageBackgroundColor =  group.signageBackgroundColor || "#000";
-    retObj.omxVolume = (group.omxVolume || group.omxVolume == 0)?group.omxVolume:100;
+    retObj.omxVolume = (group.omxVolume || group.omxVolume === 0)?group.omxVolume:100;
     retObj.timeToStopVideo = group.timeToStopVideo || 0;
     retObj.logo =  group.logo;
     retObj.logox =  group.logox;
@@ -199,7 +199,7 @@ exports.loadObject = function (req, res, next, id) {
 
         req.object = object;
         next();
-    })
+    });
 }
 
 //list of objects
@@ -220,7 +220,6 @@ exports.index = function (req, res) {
         var str = new RegExp(req.query['string'], "i")
         criteria['name'] = str;
     }
-
 
     if (req.query['location']) {
         criteria['$or'] = [ {'location':req.query['location']}, {'configLocation':req.query['location']} ];
@@ -262,22 +261,20 @@ exports.index = function (req, res) {
         data.currentVersion = {version: pipkgjson.version, platform_version: pipkgjson.platform_version,
                     beta: pipkgjsonBeta.version};
         return rest.sendSuccess(res, 'sending Player list', data);
-    })
+    });
 }
 
 exports.getObject = function (req, res) {
-
     var object = req.object;
+
     if (object) {
         return rest.sendSuccess(res, 'Player details', object);
     } else {
         return rest.sendError(res, 'Unable to retrieve Player details', err);
     }
-
 };
 
 exports.createObject = function (req, res) {
-
     var player;
 
     Player.findOne({cpuSerialNumber: req.body.cpuSerialNumber}, function (err, data) {
@@ -288,10 +285,12 @@ exports.createObject = function (req, res) {
 
         if (data) {
             delete req.body.__v;        //do not copy version key
-            player = _.extend(data, req.body)
+            player = _.extend(data, req.body);
         } else {
             player = new Player(req.body);
-            if (!player.group) player.group = defaultGroup;
+
+            if (!player.group)
+                player.group = defaultGroup;
         }
         player.registered = false;
 
@@ -303,15 +302,15 @@ exports.createObject = function (req, res) {
             } else {
                 console.log("unable to find group for the player");
             }
-        })
+        });
         player.save(function (err, obj) {
             if (err) {
                 return rest.sendError(res, 'Error in saving new Player', err || "");
             } else {
                 return rest.sendSuccess(res, 'new Player added successfully', obj);
             }
-        })
-    })
+        });
+    });
 }
 
 exports.updateObject = function (req, res) {
@@ -332,7 +331,7 @@ exports.updateObject = function (req, res) {
             if (!req.body.group || (req.body.group && req.body.group._id)){
                 next()
             } else if (playerGroup._id){
-                req.body.group = playerGroup
+                req.body.group = playerGroup;
                 next()
             } else {
                 delete playerGroup._id;
@@ -363,8 +362,8 @@ exports.updateObject = function (req, res) {
                 } else {
                     console.log("unable to find group for the player");
                 }
-            })
-    })
+            });
+    });
 };
 
 
@@ -378,7 +377,7 @@ exports.deleteObject = function (req, res) {
         else {
             return rest.sendSuccess(res, 'Player record deleted successfully');
         }
-    })
+    });
 }
 
 var updatePlayerCount = {},
@@ -399,7 +398,7 @@ exports.updatePlayerStatus = function (obj) {
             if (data) {
                 if (!obj.lastUpload || (obj.lastUpload < data.lastUpload))
                     delete obj.lastUpload;
-                if (!obj.name || obj.name.length == 0)
+                if (!obj.name || obj.name.length === 0)
                     delete obj.name;
                 player = _.extend(data, obj)
                 if (!player.isConnected) {

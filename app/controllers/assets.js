@@ -1,13 +1,13 @@
 'use strict';
 
-var fs = require('fs'),
+let fs = require('fs'),
     path = require('path'),
     async = require('async'),
     util = require('util'),
     _ = require('lodash'),
     fileUtil = require('../others/file-util');
 
-var mongoose = require('mongoose'),
+let mongoose = require('mongoose'),
     Asset = mongoose.model('Asset'),
     config = require('../../config/config'),
     rest = require('../others/restware');
@@ -15,18 +15,19 @@ var mongoose = require('mongoose'),
 exports.index = function (req, res) {
 
     var files,dbdata;
+
     async.series([
         function(next) {
             fs.readdir(config.mediaDir, function (err, data) {
                 if (err) {
-                    next("Error reading media directory: " + err)
+                    next("Error reading media directory: " + err);
                 } else {
                     files = data.filter(function (file) {
-                        return (file.charAt(0) != '_' && file.charAt(0) != '.');
+                        return (file.charAt(0) !== '_' && file.charAt(0) !== '.');
                     });
                     next();
                 }
-            })
+            });
         },
         function(next)  {
             Asset.find({}, function (err, data) {
@@ -36,38 +37,26 @@ exports.index = function (req, res) {
                     dbdata = data;
                 }
                 next();
-            })
+            });
         }
     ], function(err) {
         if (err)
             rest.sendError(res,err);
         else
             rest.sendSuccess(res, "Sending media directory files: ",
-                {files: files, dbdata: dbdata, systemAssets: config.systemAssets})
+                {files: files, dbdata: dbdata, systemAssets: config.systemAssets});
 
     });
 }
 
-
 exports.createFiles = function (req, res) {
 
-    var files = [],
-        data = [];
+    let files = [], data = [];
 
     if (req.files)
-        files = req.files["assets"]
+        files = req.files["assets"];
     else
         return rest.sendError(res, "There are no files to be uploaded");
-
-    async.each(files, renameFile, function (err) {
-        if (err) {
-            var msg = "File rename error after upload: "+err;
-            util.log(msg);
-            return rest.sendError(res, msg);
-        } else {
-            return rest.sendSuccess(res, ' Successfully uploaded files', data);
-        }
-    })
 
     function renameFile(fileObj, next) {
         console.log("Uploaded file: "+fileObj.path);
@@ -96,6 +85,15 @@ exports.createFiles = function (req, res) {
         });
     }
 
+    async.each(files, renameFile, function (err) {
+        if (err) {
+            let msg = "File rename error after upload: " + err;
+            util.log(msg);
+            return rest.sendError(res, msg);
+        } else {
+            return rest.sendSuccess(res, ' Successfully uploaded files', data);
+        }
+    });
 }
 
 exports.updateFileDetails = function (req, res) {
@@ -136,12 +134,12 @@ exports.getFileDetails = function (req, res) {
                     else if (file.match(config.txtFileRegex))
                         fileData.type = 'text';
                     else if (file.match(config.radioFileRegex))
-                        fileData.type = 'radio'
+                        fileData.type = 'radio';
                     else
                         fileData.type = 'other';
                     next();
                 }
-            })
+            });
         },
         function(next) {
             Asset.findOne({name: file}, function (err, data) {
@@ -151,7 +149,7 @@ exports.getFileDetails = function (req, res) {
                     dbData = data;
                 }
                 next();
-            })
+            });
         }
     ],function(err){
         if (err)
@@ -166,7 +164,7 @@ exports.getFileDetails = function (req, res) {
                         type: fileData.type,
                         dbdata: dbData
                     });
-    })
+    });
 }
 
 exports.deleteFile = function (req, res) {
@@ -180,15 +178,15 @@ exports.deleteFile = function (req, res) {
                 if (err)
                     next("Unable to delete file " + file + ';' + err)
                 else
-                    next()
-            })
+                    next();
+            });
         },
         function(next) {
             Asset.remove({name: file}, function (err) {
                 if (err)
                     util.log('unable to delete asset from db,' + file)
                 next();
-            })
+            });
         },
         function(next) {
             var thumbnailPath = path.join(config.thumbnailDir, file);
@@ -199,9 +197,9 @@ exports.deleteFile = function (req, res) {
                     if (err)
                         util.log('unable to find/delete thumbnail: ' + err)
                     next();
-                })
+                });
             } else {
-                next()
+                next();
             }
         }
     ], function(err) {
@@ -209,7 +207,7 @@ exports.deleteFile = function (req, res) {
             rest.sendError(res,err);
         else
             return rest.sendSuccess(res, 'Deleted file successfully', file);
-    })
+    });
 }
 
 exports.updateAsset = function (req, res) {
@@ -247,7 +245,7 @@ exports.updateAsset = function (req, res) {
                 rest.sendError(res,err);
             else
                 return rest.sendSuccess(res, 'Successfully renamed file to', newName);
-        })
+        });
     } else if (req.body.dbdata) {
         Asset.load(req.body.dbdata._id, function (err, asset) {
             if (err || !asset) {
@@ -261,7 +259,7 @@ exports.updateAsset = function (req, res) {
                     return rest.sendSuccess(res, 'Categories saved', data);
                 });
             }
-        })
+        });
     }
 }
 
@@ -273,6 +271,7 @@ exports.getCalendar = function (req, res) {
             return rest.sendError(res, 'Gcal file read error', err);
 
         var calData = JSON.parse(data);
+
         require('./gcal').index(calData, function (err, list) {
             if (err) {
                 return rest.sendError(res, 'Gcal error', err);
@@ -287,7 +286,7 @@ exports.getCalendar = function (req, res) {
                     }
                 );
             }
-        })
+        });
     });
 }
 
@@ -320,7 +319,7 @@ exports.createLinkFile = function (req, res) {
         function (next) {
             fs.writeFile(config.mediaPath + details.name + details.type, JSON.stringify(details, null, 4), 'utf8', function (err) {
                 next(err);
-            })
+            });
         },function(next) {
                 require('./server-assets').storeLinkDetails(details.name+details.type,
                     'link',
@@ -332,32 +331,32 @@ exports.createLinkFile = function (req, res) {
                     return rest.sendError(res, 'error in creating link file', err);
                 else
                     return rest.sendSuccess(res, 'Link file created for the link as ' + details.name + details.type);
-        })
+        });
 }
 
 exports.getLinkFileDetails = function (req, res) {
     var fileToRead = req.params['file'];
 
-    var retData = {}
+    var retData = {};
 
     async.series([
         function (next) {
             fs.readFile(config.mediaPath + fileToRead, 'utf-8', function (err, data) {
-                retData.data = data
-                next(err)
-            })
+                retData.data = data;
+                next(err);
+            });
         }, function (next) {
             Asset.findOne({name: fileToRead}, function (err, dbdata) {
-                retData.dbdata = dbdata
-                next()
-            })
+                retData.dbdata = dbdata;
+                next();
+            });
     }], function (err) {
         if (err) {
             return rest.sendError(res, 'unable to read link file, error:' + err);
         } else {
             return rest.sendSuccess(res, 'link file details', retData);
         }
-    })
+    });
 }
 
 exports.updatePlaylist = function (req,res) {

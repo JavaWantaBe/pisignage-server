@@ -24,7 +24,7 @@ var allowCrossDomain = function (req, res, next) {
     res.header('Access-Control-Allow-Methods', 'HEAD,GET,PUT,POST,DELETE,OPTIONS');
     res.header('Access-Control-Allow-Headers', 'Content-Type,Content-Length, X-Requested-With,origin,accept,Authorization,x-access-token,Last-Modified');
 
-    if (req.method == 'OPTIONS') {
+    if (req.method === 'OPTIONS') {
         res.sendStatus(200);
     }
     else {
@@ -63,8 +63,8 @@ var basicHttpAuth = function(req,res,next) {
 
         require('../app/controllers/licenses').getSettingsModel(function(err,settings){
             if( (!settings.authCredentials) ||
-                (!settings.authCredentials.user || username == settings.authCredentials.user) &&
-                (!settings.authCredentials.password || password == settings.authCredentials.password)) {
+                (!settings.authCredentials.user || username === settings.authCredentials.user) &&
+                (!settings.authCredentials.password || password === settings.authCredentials.password)) {
                 //console.log("http request authorized for download for "+req.path);
                 next();
             } else {
@@ -82,7 +82,7 @@ module.exports = function (app) {
     //CORS related  http://stackoverflow.com/questions/7067966/how-to-allow-cors-in-express-nodejs
     app.use(allowCrossDomain);
 
-    if (process.env.NODE_ENV == 'development') {
+    if (process.env.NODE_ENV === 'development') {
 
         // Disable caching of scripts for easier testing
         app.use(function noCache(req, res, next) {
@@ -98,9 +98,9 @@ module.exports = function (app) {
         app.locals.compileDebug = true;
     }
 
-    if (process.env.NODE_ENV == 'production') {
+    if (process.env.NODE_ENV === 'production') {
         app.use(favicon(path.join(config.root, 'public/app/img', 'favicon.ico')));
-    };
+    }
 
     //app.use(auth.connect(digest));      //can specify specific routes for auth also
     app.use(basicHttpAuth);
@@ -144,12 +144,12 @@ module.exports = function (app) {
         //ignore range error as well
         if (err.message.indexOf('Range Not Satisfiable') >=0 )
             return res.send();
-        console.error(err.stack)
-        res.status(500).render('500')
-    })
+        console.error(err.stack);
+        res.status(500).render('500');
+    });
 
     app.use(function (req, res, next) {
         //res.redirect('/');
         res.status(404).render('404', {url: req.originalUrl})
-    })
+    });
 };

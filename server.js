@@ -47,9 +47,10 @@ var app = express();
 require('./config/express')(app);
 
 // Start server
-var server;
+let server;
+
 if (config.https) {
-    var https_options = {
+    const https_options = {
         ca: fs.readFileSync("/home/ec2-user/.ssh/intermediate.crt"),
         key: fs.readFileSync("/home/ec2-user/.ssh/pisignage-server.key"),
         cert: fs.readFileSync("/home/ec2-user/.ssh/pisignage-server.crt")
@@ -62,8 +63,9 @@ else {
     server = require('http').createServer(app);
 }
 
-var io = oldSocketio.listen(server);
-var ioNew = socketio(server,{
+let io = oldSocketio.listen(server);
+
+let ioNew = socketio(server,{
     path: '/newsocket.io',
     serveClient: true,
     // below are engine.IO options
@@ -76,7 +78,6 @@ var ioNew = socketio(server,{
 //Bootstrap socket.io
 require('./app/controllers/server-socket').startSIO(io);
 require('./app/controllers/server-socket-new').startSIO(ioNew);
-
 require('./app/controllers/scheduler');
 
 server.listen(config.port, function () {

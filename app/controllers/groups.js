@@ -19,7 +19,7 @@ var installation;
 
 licenses.getSettingsModel(function(err,settings){
     installation = settings.installation || "local"
-})
+});
 
 
 
@@ -38,7 +38,7 @@ exports.newGroup = function (group, cb) {
             return cb('Unable to create a group folder in server: '+object.name);
         }
         fs.mkdir(path.join(config.syncDir,installation, object.name),function(err){
-            if (err && (err.code != 'EEXIST'))
+            if (err && (err.code !== 'EEXIST'))
                 return cb('Unable to create a group folder in server: '+err);
             else {
                 object.save(function (err, data) {
@@ -67,7 +67,7 @@ exports.index = function (req, res) {
     var criteria = {};
 
     if (req.query['string']) {
-        var str = new RegExp(req.query['string'], "i")
+        var str = new RegExp(req.query['string'], "i");
         criteria['name'] = str;
     }
 
@@ -75,8 +75,8 @@ exports.index = function (req, res) {
         criteria['all'] = true;
     }
 
-    var page = req.query['page'] > 0 ? req.query['page'] : 0
-    var perPage = req.query['per_page'] || 500
+    var page = req.query['page'] > 0 ? req.query['page'] : 0;
+    var perPage = req.query['per_page'] || 500;
 
     var options = {
         perPage: perPage,
@@ -89,12 +89,13 @@ exports.index = function (req, res) {
             return rest.sendError(res, 'Unable to get Group list', err);
         else
             return rest.sendSuccess(res, 'sending Group list', groups || []);
-    })
+    });
 }
 
 exports.getObject = function (req, res) {
 
     var object = req.object;
+
     if (object) {
         return rest.sendSuccess(res, 'Group details', object);
     } else {
@@ -112,7 +113,7 @@ exports.createObject = function (req, res) {
             return rest.sendError(res, err);
         else
             return rest.sendSuccess(res, 'new Group added successfully', data);
-    })
+    });
 }
 
 exports.updateObject = function (req, res) {
@@ -135,10 +136,12 @@ exports.updateObject = function (req, res) {
     }
 
     var object = req.object;
+
     delete req.body.__v;        //do not copy version key
-    if (object.name != req.body.name) {
+
+    if (object.name !== req.body.name) {
         fs.mkdir(path.join(config.syncDir, installation, req.body.name), function (err) {
-            if (err && (err.code != 'EEXIST'))
+            if (err && (err.code !== 'EEXIST'))
                 console.log('Unable to create a group folder in server: ' + err);
         });
     }
@@ -164,14 +167,15 @@ exports.updateObject = function (req, res) {
 
 
 exports.deleteObject = function (req, res) {
-    if (!req.object || req.object.name == "default")
+    if (!req.object || req.object.name === "default")
         return rest.sendError(res,'No group specified or can not remove default group');
 
     var object = req.object;
+
     object.remove(function (err) {
         if (err)
             return rest.sendError(res, 'Unable to remove Group record', err);
         else
             return rest.sendSuccess(res, 'Group record deleted successfully');
-    })
+    });
 }

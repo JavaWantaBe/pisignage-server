@@ -25,11 +25,12 @@ var readGcal = function (file) {
     }
     return fileContents;
 }
+
 exports.index = function (calData, cb) {
     oauth2Client.setCredentials(calData.tokens);
     calendar.calendarList.list({minAccessRole: 'owner', auth: oauth2Client}, function (err, calendarList) {
         err ? cb(err) : cb(null, calendarList);
-    })
+    });
 };
 
 exports.getCalendar = function (file, options, cb) {
@@ -39,5 +40,4 @@ exports.getCalendar = function (file, options, cb) {
     calendar.events.list(options, function (err, eventsList) {
         err ? cb(err) : cb(null, eventsList);
     });
-
 };

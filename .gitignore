@@ -7,8 +7,5 @@ data/sync_folders
 data/releases
 data/licenses
 
-
-
 data/releases/package.json
-
 data/releases/server-package.json
