@@ -24,7 +24,7 @@ db.connection.on('error',function(){
     console.log('********************************************\n');
 
     process.exit(1);
-})
+});
 
 // check system 
 require('./app/others/system-check')();

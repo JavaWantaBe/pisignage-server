@@ -5,39 +5,40 @@ var async = require('async'),
 
 module.exports = function(){
 	var errors = 0;
+
     async.series([
 		function(cb){
-			fs.exists(config.mediaDir,function(exists){
+			fs.exists(config.mediaDir, function(exists){
 				if(!exists){
-                    fs.mkdir(config.mediaDir,0777,function (err) {
+                    fs.mkdir(config.mediaDir, 0o777, function (err) {
                         if (err) {
                             console.log('*****************************************************');
                             console.log('*     Unable to create media directory, exiting     *');
                             console.log('*****************************************************\n');
                             process.exit(1);
                         } else {
-                            cb()
+                            cb();
                         }
-                    })
+                    });
 				} else
 				    cb();
-			})
+			});
 		},
 		function(cb){
 			fs.exists(config.thumbnailDir,function(exists){
 				if(!exists){
-                    fs.mkdir(config.thumbnailDir,0777,function (err) {
+                    fs.mkdir(config.thumbnailDir, 0o777, function (err) {
                         if (err) {
                             console.log('********************************************************************');
                             console.log('* media/_thumbnails directory absent, thumbnails cannot be created *');
                             console.log('********************************************************************\n');
                             errors++;
                         }
-                        cb()
-                    })
+                        cb();
+                    });
                 } else
 				    cb();
-			})
+			});
 		},
 		function(cb){
 			exec('ffprobe -version',function(err,stdout,stderr){
@@ -49,7 +50,7 @@ module.exports = function(){
                     errors++;
                 }
 				cb();
-			})
+			});
 		},
 		function(cb){
 			exec('convert -version',function(err,stdout,stderr){
@@ -61,7 +62,7 @@ module.exports = function(){
                     errors++;
                 }
 				cb();
-			})
+			});
 		}
 	],function(err){
 		console.log('********************************************');
@@ -70,5 +71,5 @@ module.exports = function(){
         else
             console.log('*        system check passed               *');
         console.log('********************************************');
-	})
-}
+	});
+};

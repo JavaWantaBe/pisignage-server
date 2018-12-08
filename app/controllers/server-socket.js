@@ -18,14 +18,14 @@ var handleClient = function (socket) {
             },
             settings,
             status
-        )
+        );
         statusObject.newSocketIo = false;
         players.updatePlayerStatus(statusObject)
     });
 
     socket.on('secret_ack', function (err) {
-        players.secretAck(socket.id, err ? false : true);
-    })
+        players.secretAck(socket.id, !err);
+    });
 
     socket.on('shell_ack', function (response) {
         players.shellAck(socket.id, response);
@@ -49,12 +49,12 @@ exports.startSIO = function (io) {
     io.sockets.on('connection', handleClient);
     io.set('log level', 0);
     iosockets = io.sockets;
-}
+};
 
 exports.emitMessage = function (sid) {
     if (iosockets.sockets[sid]) {
         var args = Array.prototype.slice.call(arguments,1);
         iosockets.sockets[sid].emit.apply(iosockets.sockets[sid], args);
     }
-}
+};
 

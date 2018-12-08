@@ -11,7 +11,7 @@ var sendSuccess = function (res, msg, data) {
 
     res.contentType('json');
     return res.json(out);
-}
+};
 
 var sendError = function (res, msg, err) {
     if (!res)
@@ -24,11 +24,11 @@ var sendError = function (res, msg, err) {
 
     res.contentType('json');
     return res.json(out);
-}
+};
 
 
 module.exports = {
     sendSuccess: sendSuccess,
     sendError: sendError
-}
+};
 

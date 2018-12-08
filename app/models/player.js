@@ -45,30 +45,30 @@ var PlayerSchema = new Schema({
     cecTvStatus:            {type: Boolean, default : true},
     piTemperature:          {type:String},
     uptime:                 {type:String}
-})
+});
 
 
 
 PlayerSchema.path('cpuSerialNumber').validate(function (name) {
-    return name.length > 0
-}, 'cpuSerialNumber cannot be blank')
+    return name.length > 0;
+}, 'cpuSerialNumber cannot be blank');
 
 PlayerSchema.statics = {
    load: function (id, cb) {
         this.findOne({ _id: id })
-            .exec(cb)
+            .exec(cb);
     },
 
     list: function (options, cb) {
-        var criteria = options.criteria || {}
+        var criteria = options.criteria || {};
 
         this.find(criteria)
             .sort({name: 1}) // sort by date
             .limit(options.perPage)
             .skip(options.perPage * options.page)
-            .exec(cb)
+            .exec(cb);
     }
-}
+};
 
-mongoose.model('Player', PlayerSchema)
+mongoose.model('Player', PlayerSchema);
 

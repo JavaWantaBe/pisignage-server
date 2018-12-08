@@ -17,7 +17,7 @@ exports.modifyHTML = function(assetsDir,templateName){
 
     fs.readFile(templatePath,'utf8',function(err,data){
         if(err)
-           return console.log('error','custom_layout File Read Error',err)
+           return console.log('error','custom_layout File Read Error',err);
         //remove script tags
         sanitize= sanitizeHtml(data,{
                 allowedTags: ['!DOCTYPE','html','head','meta','title','body','h1','h2','h3', 'h4', 'h5', 'h6', 
@@ -36,7 +36,6 @@ exports.modifyHTML = function(assetsDir,templateName){
         
         fs.writeFile(templatePath,modifiedData,function(err){
             // template modification successful
-        })
-       
-    })
+        });
+    });
 }

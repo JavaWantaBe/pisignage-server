@@ -1,4 +1,4 @@
-'use strict;'
+'use strict';
 
 var mongoose = require('mongoose'),
     Player = mongoose.model('Player'),
@@ -33,6 +33,10 @@ var readVersions = function() {
         pipkgjsonBeta = {};
     }
 }
+
+var activePlayers = {},
+    lastCommunicationFromPlayers = {};
+
 readVersions();
 
 fs.mkdir(config.logStoreDir, function(err) {
@@ -40,34 +44,6 @@ fs.mkdir(config.logStoreDir, function(err) {
         console.log("Error creating logs directory, "+err.code)
     }
 });
-
-
-var activePlayers = {},
-    lastCommunicationFromPlayers = {};
-Player.update({"isConnected": true},{$set:{"isConnected": false}},{ multi: true }, function(err, num) {
-    if (!err && num)
-        console.log("Reset isConnected for "+num.nModified+" players");
-    checkPlayersWatchdog();
-});
-
-var defaultGroup = {_id: 0, name: 'default'};
-//create a default group if does not exist
-licenses.getSettingsModel(function(err,data){
-    settings = data;
-    installation = settings.installation || "local"
-
-    Group.update({name:"default"},{name:"default",description:"Default group for Players"},{upsert:true},function(err){
-        fs.mkdir(path.join(config.syncDir,installation), function (err) {
-            fs.mkdir(path.join(config.syncDir,installation, "default"), function (err) {
-            });
-        })
-        Group.findOne({name: 'default'}, function (err, data) {
-            if (!err && data)
-                defaultGroup = data;
-        });
-    });
-})
-
 
 function checkPlayersWatchdog() {
     var playerIds = Object.keys(activePlayers);
@@ -92,6 +68,30 @@ function checkPlayersWatchdog() {
     });
 }
 
+Player.update({"isConnected": true},{$set:{"isConnected": false}},{ multi: true }, function(err, num) {
+    if (!err && num)
+        console.log("Reset isConnected for "+num.nModified+" players");
+    checkPlayersWatchdog();
+});
+
+var defaultGroup = {_id: 0, name: 'default'};
+//create a default group if does not exist
+licenses.getSettingsModel(function(err,data){
+    settings = data;
+    installation = settings.installation || "local"
+
+    Group.update({name:"default"},{name:"default",description:"Default group for Players"},{upsert:true},function(err){
+        fs.mkdir(path.join(config.syncDir,installation), function (err) {
+            fs.mkdir(path.join(config.syncDir,installation, "default"), function (err) {
+            });
+        })
+        Group.findOne({name: 'default'}, function (err, data) {
+            if (!err && data)
+                defaultGroup = data;
+        });
+    });
+});
+
 exports.updateDisconnectEvent = function(socketId, reason) {
     Player.findOne({socket:socketId}, function(err,player) {
         if (!err && player) {
@@ -103,7 +103,7 @@ exports.updateDisconnectEvent = function(socketId, reason) {
             //console.log("not able to find player for disconnect event: "+socketId);
         }
     });
-}
+};
 
 var sendConfig = function (player, group, periodic) {
     var retObj = {};
@@ -124,7 +124,7 @@ var sendConfig = function (player, group, periodic) {
 
     retObj.secret = group.name;
     groupPlaylists = groupPlaylists || [];
-    if (!player.version || player.version.charAt(0) == "0") {
+    if (!player.version || player.version.charAt(0) === "0") {
         if (groupPlaylists[0] && groupPlaylists[0].name)
             retObj.currentPlaylist = groupPlaylists[0].name
         else
@@ -185,9 +185,10 @@ var sendConfig = function (player, group, periodic) {
     if (settings.sshPassword)
         retObj.sshPassword = settings.sshPassword;
     retObj.currentTime = Date.now();
+
     var socketio = (player.newSocketIo?newSocketio:oldSocketio);
     socketio.emitMessage(player.socket, 'config', retObj);
-}
+};
 
 //Load a object
 exports.loadObject = function (req, res, next, id) {
@@ -217,8 +218,7 @@ exports.index = function (req, res) {
     }
 
     if (req.query['string']) {
-        var str = new RegExp(req.query['string'], "i")
-        criteria['name'] = str;
+        criteria['name'] = new RegExp(req.query['string'], "i");
     }
 
     if (req.query['location']) {
@@ -237,20 +237,20 @@ exports.index = function (req, res) {
         criteria['version'] = req.query['version'];
     }
 
-    var page = req.query['page'] > 0 ? req.query['page'] : 0
-    var perPage = req.query['per_page'] || 500
+    var page = req.query['page'] > 0 ? req.query['page'] : 0;
+    var perPage = req.query['per_page'] || 500;
 
     var options = {
         perPage: perPage,
         page: page,
         criteria: criteria
-    }
+    };
 
     Player.list(options, function (err, objects) {
         if (err)
             return rest.sendError(res, 'Unable to get Player list', err);
 
-        objects = objects || []
+        objects = objects || [];
 
         var data = {
             objects: objects,
@@ -262,7 +262,7 @@ exports.index = function (req, res) {
                     beta: pipkgjsonBeta.version};
         return rest.sendSuccess(res, 'sending Player list', data);
     });
-}
+};
 
 exports.getObject = function (req, res) {
     var object = req.object;
@@ -311,12 +311,12 @@ exports.createObject = function (req, res) {
             }
         });
     });
-}
+};
 
 exports.updateObject = function (req, res) {
     var object = req.object;
 
-    if (req.body.group && req.object.group._id != req.body.group._id) {
+    if (req.body.group && req.object.group._id !== req.body.group._id) {
         req.body.registered = false;
     }
     delete req.body.__v;        //do not copy version key
@@ -326,13 +326,13 @@ exports.updateObject = function (req, res) {
                 name: "__player__"+ object.cpuSerialNumber,
                 installation: req.installation,
                 _id: object.selfGroupId
-            }
+            };
 
             if (!req.body.group || (req.body.group && req.body.group._id)){
-                next()
+                next();
             } else if (playerGroup._id){
                 req.body.group = playerGroup;
-                next()
+                next();
             } else {
                 delete playerGroup._id;
                 groups.newGroup(playerGroup,function(err,data){
@@ -341,8 +341,8 @@ exports.updateObject = function (req, res) {
                     }
                     req.body.group = data.toObject()
                     object.selfGroupId = data._id;
-                    next()
-                })
+                    next();
+                });
             }
         },
         function (next) {
@@ -352,7 +352,7 @@ exports.updateObject = function (req, res) {
                     rest.sendError(res, 'Unable to update Player data', err);
                 else
                     rest.sendSuccess(res, 'updated Player details', data);
-                next()
+                next();
             });
         }], function() {
 
@@ -378,10 +378,11 @@ exports.deleteObject = function (req, res) {
             return rest.sendSuccess(res, 'Player record deleted successfully');
         }
     });
-}
+};
 
 var updatePlayerCount = {},
     perDayCount = 20 * 24;
+
 exports.updatePlayerStatus = function (obj) {
     var retObj = {};
 
@@ -439,8 +440,8 @@ exports.updatePlayerStatus = function (obj) {
                 }
             });
         }
-    })
-}
+    });
+};
 
 exports.secretAck = function (sid, status) {
     Player.findOne({socket: sid}, function (err, player) {
@@ -448,10 +449,10 @@ exports.secretAck = function (sid, status) {
             player.registered = status;
             player.save();
         } else {
-            console.log("not able to find player")
+            console.log("not able to find player");
         }
-    })
-}
+    });
+};
 
 var pendingCommands = {};
 var shellCmdTimer = {};
@@ -472,8 +473,8 @@ exports.shell = function (req, res) {
                 { err: "Could not get response from the player,Make sure player is online and try again."})
             pendingCommands[sid] = null;
         }
-    },60000)
-}
+    },60000);
+};
 
 exports.shellAck = function (sid, response) {
 
@@ -484,25 +485,26 @@ exports.shellAck = function (sid, response) {
         pendingCommands[sid] = null;
     }
 
-}
+};
 
 exports.swupdate = function (req, res) {
     var object = req.object,
         version = req.body.version || null;
     if (!version) {
-        version = 'piimage'+pipkgjson.version+'.zip'
+        version = 'piimage'+pipkgjson.version+'.zip';
     }
     var socketio = (object.newSocketIo?newSocketio:oldSocketio);
     socketio.emitMessage(object.socket, 'swupdate',version);
     //console.log("updating to "+(version?version:'piimage'+pipkgjson.version+'.zip'));
     return rest.sendSuccess(res, 'SW update command issued');
-}
+};
 
 exports.upload = function (cpuId, filename, data) {
     Player.findOne({cpuSerialNumber: cpuId}, function (err, player) {
         if (player) {
             var logData;
-            if(filename.indexOf('forever_out') == 0 ){
+
+            if(filename.indexOf('forever_out') === 0 ){
                 fs.writeFile(config.logStoreDir+'/'+cpuId+'_forever_out.log',data,function(err){
                     if(err) {
                         console.log("error", "Error in writing forever_out log for " + cpuId);
@@ -510,8 +512,8 @@ exports.upload = function (cpuId, filename, data) {
                     }
                     // else
                     //     console.log("info","Forever Log file saved for player : "+cpuId);
-                })
-            } else if (path.extname(filename) == '.log' && filename != "forever_out.log") {
+                });
+            } else if (path.extname(filename) === '.log' && filename !== "forever_out.log") {
                 try {
                     logData = JSON.parse(data);
                     logData.installation = player.installation;
@@ -521,14 +523,14 @@ exports.upload = function (cpuId, filename, data) {
                     console.log(player.cpuSerialNumber)
                     console.log("corrupt log file: "+filename);
                 }
-            } else if (path.extname(filename) == '.events') {
+            } else if (path.extname(filename) === '.events') {
                 var lines = data.split('\n'),
                     events = [];
                 for (var i = 0; i < lines.length; i++) {
                     //console.log(lines[i]);
                     try {
                         logData = JSON.parse(lines[i]);
-                        if (logData.category == "file" || logData.description == "connected to server")
+                        if (logData.category === "file" || logData.description === "connected to server")
                             continue;
                         logData.installation = player.installation;
                         logData.playerId = player._id.toString();
@@ -544,8 +546,8 @@ exports.upload = function (cpuId, filename, data) {
         } else {
             console.log("ignoring file upload: " + filename);
         }
-    })
-}
+    });
+};
 
 exports.tvPower = function(req,res){
     var status = req.body.status;
@@ -553,7 +555,7 @@ exports.tvPower = function(req,res){
     var socketio = (object.newSocketIo?newSocketio:oldSocketio);
     socketio.emitMessage(object.socket,'cmd','tvpower',{off: status} );
     return rest.sendSuccess(res,'TV command issued');
-}
+};
 
 
 
@@ -579,8 +581,8 @@ exports.piScreenShot = function (sid,data) { // save screen shot in  _screenshot
             );
             delete pendingSnapshots[cpuId];
         }
-    })
-}
+    });
+};
 
 exports.takeSnapshot = function (req, res) { // send socket.io event
     var object = req.object,
@@ -609,7 +611,7 @@ exports.takeSnapshot = function (req, res) { // send socket.io event
                     }
                 );
             })
-        }, 60000)
+        }, 60000);
         var socketio = (object.newSocketIo?newSocketio:oldSocketio);
         socketio.emitMessage(object.socket, 'snapshot');
     }

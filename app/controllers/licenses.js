@@ -1,4 +1,4 @@
-'use strict;'
+'use strict';
 
 var fs = require('fs'),
 	path = require('path'),
@@ -27,7 +27,7 @@ var getTxtFiles = function(cb){
         });
         cb(null,txtOnly);
     });
-}
+};
 
 exports.index = function(req,res){
 
@@ -70,13 +70,13 @@ exports.deleteLicense = function(req,res){ // delete particular license and retu
 			return rest.sendSuccess(res,"License "+req.params['filename']+" deleted successfuly",files);
 		});
 	});
-}
+};
 
 exports.getSettingsModel = function(cb) {
     Settings.findOne(function (err, settings) {
         if (err || !settings) {
             if (settingsModel) {
-                cb(null, settingsModel)
+                cb(null, settingsModel);
             } else {
                 settingsModel = new Settings();
                 settingsModel.save(cb);
@@ -85,19 +85,19 @@ exports.getSettingsModel = function(cb) {
             cb(null,settings);
         }
     });
-}
+};
 
 exports.getSettings = function(req,res) {
     exports.getSettingsModel(function (err, data) {
         if (err) {
             return rest.sendError(res, 'Unable to access Settings', err);
         } else {
-            var obj = data.toObject()
+            var obj = data.toObject();
             obj.serverIp = serverIp;
             return rest.sendSuccess(res, 'Settings', obj);
         }
     });
-}
+};
 
 exports.updateSettings = function(req,res) {
     var restart;
@@ -109,7 +109,7 @@ exports.updateSettings = function(req,res) {
         //if (settings.installation != req.body.installation)
         restart = true;
         if (settings)
-            settings = _.extend(settings, req.body)
+            settings = _.extend(settings, req.body);
         else
             settings = new Settings(req.body);
         settings.save(function (err, data) {
@@ -119,13 +119,13 @@ exports.updateSettings = function(req,res) {
                 rest.sendSuccess(res, 'Settings Saved', data);
             }
             if (restart)  {
-                console.log("restarting server")
+                console.log("restarting server");
                 require('child_process').fork(require.main.filename);
                 process.exit(0);
             }
         });
     });
-}
+};
 
 exports.getSettingsModel(function(err,settings){
     licenseDir = config.licenseDirPath+(settings.installation || "local");

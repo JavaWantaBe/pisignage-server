@@ -3,7 +3,7 @@
  */
 
 var mongoose = require('mongoose'),
-    Schema = mongoose.Schema
+    Schema = mongoose.Schema;
 
 /**
  * Setters and Getters
@@ -13,16 +13,16 @@ var mongoose = require('mongoose'),
  * Post Schema
  */
 var LabelSchema= new Schema({
-    name:                   {type: String,unique: true, index: true},
+    name:                   {type: String, unique: true, index: true},
     mode:                   {type: String},
 
     createdAt:              {type: Date, default: Date.now},
     createdBy:              {_id: {type: Schema.ObjectId, ref: 'User'}, name: String}
-})
+});
 
 LabelSchema.path('name').validate(function (name) {
-    return name.length > 0
-}, 'name cannot be blank')
+    return name.length > 0;
+}, 'name cannot be blank');
 
 
 /**
@@ -48,7 +48,7 @@ LabelSchema.statics = {
 
     load: function (id, cb) {
         this.findOne({ _id: id })
-            .exec(cb)
+            .exec(cb);
     },
 
     /**
@@ -60,15 +60,15 @@ LabelSchema.statics = {
      */
 
     list: function (options, cb) {
-        var criteria = options.criteria || {}
+        var criteria = options.criteria || {};
 
         this.find(criteria)
             .sort({name: 1}) // sort by date
             .limit(options.perPage)
             .skip(options.perPage * options.page)
-            .exec(cb)
+            .exec(cb);
     }
-}
+};
 
-mongoose.model('Label', LabelSchema)
+mongoose.model('Label', LabelSchema);
 

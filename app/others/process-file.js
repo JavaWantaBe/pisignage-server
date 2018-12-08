@@ -205,7 +205,7 @@ exports.processFile = function (filename, filesize, categories, cb) {
                         thumbnail: thumbnail,
                         createdAt: Date.now()
                     };
-                if (object.duration == 10)      //hack for default avoidance
+                if (object.duration === 10)      //hack for default avoidance
                     object.duration = 11;
 
                 if (err || !data) {

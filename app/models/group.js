@@ -1,5 +1,5 @@
 var mongoose = require('mongoose'),
-    Schema = mongoose.Schema
+    Schema = mongoose.Schema;
 
 var GroupSchema = new Schema({
     name:                   {type: String,index: true},
@@ -59,35 +59,35 @@ var GroupSchema = new Schema({
 
     createdAt:              {type: Date, default: Date.now},
     createdBy:              {_id: {type: Schema.ObjectId, ref: 'User'}, name: String}
-})
+});
 
 
 GroupSchema.path('name').validate(function (name) {
-    return name.length > 0
-}, 'name cannot be blank')
+    return name.length > 0;
+}, 'name cannot be blank');
 
 GroupSchema.statics = {
 
     load: function (id, cb) {
         this.findOne({ _id: id })
-            .exec(cb)
+            .exec(cb);
     },
 
     list: function (options, cb) {
-        var criteria = options.criteria || {}
+        var criteria = options.criteria || {};
 
         if (!criteria.all) {
-            criteria.name = {"$not": /__player__/}
+            criteria.name = {"$not": /__player__/};
         } else {
-            delete criteria.all
+            delete criteria.all;
         }
         this.find(criteria)
             .sort({name: 1}) // sort by date
             .limit(options.perPage)
             .skip(options.perPage * options.page)
-            .exec(cb)
+            .exec(cb);
     }
-}
+};
 
-mongoose.model('Group', GroupSchema)
+mongoose.model('Group', GroupSchema);
 
