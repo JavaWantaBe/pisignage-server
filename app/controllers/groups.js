@@ -1,4 +1,4 @@
-'use strict;'
+'use strict';
 
 var mongoose = require('mongoose'),
     Group = mongoose.model('Group'),
@@ -18,14 +18,14 @@ var serverMain = require('./server-main'),
 var installation;
 
 licenses.getSettingsModel(function(err,settings){
-    installation = settings.installation || "local"
+    installation = settings.installation || "local";
 });
 
 
 
 exports.newGroup = function (group, cb) {
+    let object;
 
-    var object;
     Group.findOne({name:group.name}, function(err,data) {
         if (err || !data) {
             object = new Group(group);
@@ -35,36 +35,35 @@ exports.newGroup = function (group, cb) {
         //create a sync folder under sync_folder
         if (!object.name) {
             console.log("can not be null: "+object.name);
-            return cb('Unable to create a group folder in server: '+object.name);
+            return cb('Unable to create a group folder in server: ' + object.name);
         }
-        fs.mkdir(path.join(config.syncDir,installation, object.name),function(err){
+        fs.mkdir(path.join(config.syncDir, installation, object.name), function(err){
             if (err && (err.code !== 'EEXIST'))
                 return cb('Unable to create a group folder in server: '+err);
             else {
                 object.save(function (err, data) {
                     cb(err,data);
-                })
+                });
             }
         });
-    })
-}
+    });
+};
 
 //Load a object
 exports.loadObject = function (req, res, next, id) {
 
     Group.load(id, function (err, object) {
         if (err || !object)
-            return rest.sendError(res,'Unable to get group details',err);
+            return rest.sendError(res,'Unable to get group details', err);
 
         req.object = object;
         next();
-    })
-}
+    });
+};
 
 //list of objects
 exports.index = function (req, res) {
-
-    var criteria = {};
+    let criteria = {};
 
     if (req.query['string']) {
         var str = new RegExp(req.query['string'], "i");
@@ -82,7 +81,7 @@ exports.index = function (req, res) {
         perPage: perPage,
         page: page,
         criteria: criteria
-    }
+    };
 
     Group.list(options, function (err, groups) {
         if (err)
@@ -90,7 +89,7 @@ exports.index = function (req, res) {
         else
             return rest.sendSuccess(res, 'sending Group list', groups || []);
     });
-}
+};
 
 exports.getObject = function (req, res) {
 
@@ -114,11 +113,14 @@ exports.createObject = function (req, res) {
         else
             return rest.sendSuccess(res, 'new Group added successfully', data);
     });
-}
+};
 
 exports.updateObject = function (req, res) {
 
-    var saveObject = function (err, group) {
+    let object = req.object;
+    delete req.body.__v;        //do not copy version key
+
+    let saveObject = function (err, group) {
         if (err) {
             return rest.sendError(res, err);
         } else {
@@ -133,11 +135,7 @@ exports.updateObject = function (req, res) {
             }
             return rest.sendSuccess(res, 'updated Group details', group);
         }
-    }
-
-    var object = req.object;
-
-    delete req.body.__v;        //do not copy version key
+    };
 
     if (object.name !== req.body.name) {
         fs.mkdir(path.join(config.syncDir, installation, req.body.name), function (err) {
@@ -167,10 +165,10 @@ exports.updateObject = function (req, res) {
 
 
 exports.deleteObject = function (req, res) {
+    let object = req.object;
+
     if (!req.object || req.object.name === "default")
         return rest.sendError(res,'No group specified or can not remove default group');
-
-    var object = req.object;
 
     object.remove(function (err) {
         if (err)
@@ -178,4 +176,4 @@ exports.deleteObject = function (req, res) {
         else
             return rest.sendSuccess(res, 'Group record deleted successfully');
     });
-}
+};

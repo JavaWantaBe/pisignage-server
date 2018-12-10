@@ -1,4 +1,5 @@
-'use strict;'
+'use strict';
+
 
 var mongoose = require('mongoose'),
     Label = mongoose.model('Label'),
@@ -20,13 +21,13 @@ exports.loadObject = function (req, res, next, id) {
 
         req.object = object;
         next();
-    })
-}
+    });
+};
 
 //list of objects
 exports.index = function (req, res) {
 
-    var criteria = {};
+    let criteria = {};
 
     if (req.query['string']) {
         var str = new RegExp(req.query['string'], "i");
@@ -34,26 +35,26 @@ exports.index = function (req, res) {
     }
     //criteria['mode'] = req.query('mode') || null;
 
-    var page = req.query['page'] > 0 ? req.query['page'] : 0
-    var perPage = req.query['per_page'] || 500
+    let page = req.query['page'] > 0 ? req.query['page'] : 0;
+    let perPage = req.query['per_page'] || 500;
 
-    var options = {
+    let options = {
         perPage: perPage,
         page: page,
         criteria: criteria
-    }
+    };
 
     Label.list(options, function (err, labels) {
         if (err)
             return rest.sendError(res, 'Unable to get Label list', err);
         else
             return rest.sendSuccess(res, 'sending Label list', labels);
-    })
-}
+    });
+};
 
 exports.getObject = function (req, res) {
 
-    var object = req.object;
+    let object = req.object;
 
     if (object) {
         return rest.sendSuccess(res, 'Label details', object);
@@ -64,8 +65,10 @@ exports.getObject = function (req, res) {
 
 exports.createObject = function (req, res) {
 
-    var object = new Label(req.body);
+    let object = new Label(req.body);
+
     //object.installation = req.installation;
+
     if (req.user) {
         object.createdBy = req.user._id;  //creator of entity
     }
@@ -76,12 +79,13 @@ exports.createObject = function (req, res) {
             return rest.sendSuccess(res, 'new Label added successfully', data);
         }
     });
-}
+};
 
 exports.updateObject = function (req, res) {
-    var object = req.object;
+    let object = req.object;
     delete req.body.__v;        //do not copy version key
-    object = _.extend(object, req.body)
+
+    object = _.extend(object, req.body);
     object.save(function (err, data) {
         if (err)
             return rest.sendError(res, 'Unable to update Label', err);
@@ -91,12 +95,12 @@ exports.updateObject = function (req, res) {
 
 
 exports.deleteObject = function (req, res) {
+    let object = req.object;
 
-    var object = req.object;
     object.remove(function (err) {
         if (err)
             return rest.sendError(res, 'Unable to remove Label', err);
         else
             return rest.sendSuccess(res, 'Label deleted successfully');
     });
-}
+};

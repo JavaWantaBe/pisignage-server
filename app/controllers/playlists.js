@@ -14,11 +14,11 @@ var systemPlaylists = [
         layout:"1",
         schedule:{}
     }
-]
+];
 
 var isPlaylist = function (file) {
-    return (file.charAt(0) == '_' && file.charAt(1) == '_' && file.slice(-5) == ".json");
-}
+    return (file.charAt(0) === '_' && file.charAt(1) === '_' && file.slice(-5) === ".json");
+};
 
 exports.newPlaylist = function ( playlist, cb) {
     var file = path.join(config.mediaDir, ("__" + playlist + '.json')),
@@ -34,8 +34,8 @@ exports.newPlaylist = function ( playlist, cb) {
 
     fs.writeFile(file, JSON.stringify(data, null, 4), function (err) {
         cb(err,data);
-    })
-}
+    });
+};
 
 exports.index = function (req, res) {
 
@@ -53,7 +53,7 @@ exports.index = function (req, res) {
                     settings: {},
                     assets: [],
                     name: path.basename(plfile, '.json').slice(2)
-                }
+                };
                 fs.readFile(path.join(assetDir, plfile), 'utf8', function (err, data) {
                     if (err || !data)
                         list.push(playlist);
@@ -62,7 +62,7 @@ exports.index = function (req, res) {
                         try {
                             obj = JSON.parse(data);
                         } catch (e) {
-                            console.log("playlist index parsing error for " + req.installation)
+                            console.log("playlist index parsing error for " + req.installation);
                         }
                         playlist.settings = obj.settings || {};
                         playlist.assets = obj.assets || [];
@@ -74,8 +74,8 @@ exports.index = function (req, res) {
                         list.push(playlist);
                     }
                     cb();
-                })
-            }
+                });
+            };
 
             async.each(playlists, readFile, function (err) {
                 if (err) {
@@ -83,16 +83,16 @@ exports.index = function (req, res) {
                 } else {
                     return rest.sendSuccess(res, ' Sending playlist list', list.concat(systemPlaylists));
                 }
-            })
+            });
 
         }
     });
 
-}
+};
 
 exports.getPlaylist = function (req, res) {
 
-    if (req.query['file'] == "TV_OFF")
+    if (req.query['file'] === "TV_OFF")
         return rest.sendError(res, 'System Playlist, can not be edited');
 
     var file = path.join(config.mediaDir,  ("__" + req.params['file'] + '.json'));
@@ -108,7 +108,7 @@ exports.getPlaylist = function (req, res) {
                 videoWindow: null,
                 zoneVideoWindow: {},
                 templateName: "custom_layout.html"
-            }
+            };
             if (data) {
                 var obj = {};
                 try {
@@ -128,7 +128,7 @@ exports.getPlaylist = function (req, res) {
             return rest.sendSuccess(res, ' Sending playlist content', playlist);
         }
     });
-}
+};
 
 exports.createPlaylist = function (req, res) {
 
@@ -139,14 +139,14 @@ exports.createPlaylist = function (req, res) {
             rest.sendSuccess(res, "Playlist Created: ", data);
         }
     });
-}
+};
 
 exports.savePlaylist = function (req, res) {
 
     var file = path.join(config.mediaDir,  ("__" + req.params['file'] + '.json'));
 
     fs.readFile(file, 'utf8', function (err, data) {
-        if (err && (err.code == 'ENOENT') && req.params['file'] == "TV_OFF") {
+        if (err && (err.code === 'ENOENT') && req.params['file'] === "TV_OFF") {
             data = JSON.stringify(systemPlaylists[0]);
             err = null;
         }
@@ -201,5 +201,5 @@ exports.savePlaylist = function (req, res) {
         }
     });
 
-}
+};
 

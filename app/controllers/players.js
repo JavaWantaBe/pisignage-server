@@ -201,7 +201,7 @@ exports.loadObject = function (req, res, next, id) {
         req.object = object;
         next();
     });
-}
+};
 
 //list of objects
 exports.index = function (req, res) {

@@ -14,7 +14,7 @@ let mongoose = require('mongoose'),
 
 exports.index = function (req, res) {
 
-    var files,dbdata;
+    let files, dbdata;
 
     async.series([
         function(next) {
@@ -47,7 +47,7 @@ exports.index = function (req, res) {
                 {files: files, dbdata: dbdata, systemAssets: config.systemAssets});
 
     });
-}
+};
 
 exports.createFiles = function (req, res) {
 
@@ -63,7 +63,7 @@ exports.createFiles = function (req, res) {
         var filename = fileObj.originalname.replace(config.filenameRegex, '');
 
         if ((filename).match(config.zipfileRegex)) //unzip won't work with spcaces in file name
-            filename = filename.replace(/ /g,'')
+            filename = filename.replace(/ /g,'');
 
         if(filename.match(config.brandRegex)) // change brand video name
             filename = filename.toLowerCase();
@@ -73,7 +73,7 @@ exports.createFiles = function (req, res) {
                 next(err);
             } else {
                 if((filename).match(/^custom_layout.*html$/i)){
-                    fileUtil.modifyHTML(config.mediaDir,filename)
+                    fileUtil.modifyHTML(config.mediaDir,filename);
                 }
                 data.push({
                     name: filename,
@@ -94,11 +94,11 @@ exports.createFiles = function (req, res) {
             return rest.sendSuccess(res, ' Successfully uploaded files', data);
         }
     });
-}
+};
 
 exports.updateFileDetails = function (req, res) {
     require('./server-assets').storeDetails(req, res);
-}
+};
 
 exports.getFileDetails = function (req, res) {
     var file = req.params['file'],
@@ -165,7 +165,7 @@ exports.getFileDetails = function (req, res) {
                         dbdata: dbData
                     });
     });
-}
+};
 
 exports.deleteFile = function (req, res) {
 
@@ -176,7 +176,7 @@ exports.deleteFile = function (req, res) {
         function(next) {
             fs.unlink(path.join(config.mediaDir, file), function (err) {
                 if (err)
-                    next("Unable to delete file " + file + ';' + err)
+                    next("Unable to delete file " + file + ';' + err);
                 else
                     next();
             });
@@ -184,7 +184,7 @@ exports.deleteFile = function (req, res) {
         function(next) {
             Asset.remove({name: file}, function (err) {
                 if (err)
-                    util.log('unable to delete asset from db,' + file)
+                    util.log('unable to delete asset from db,' + file);
                 next();
             });
         },
@@ -195,7 +195,7 @@ exports.deleteFile = function (req, res) {
             if(file.match(config.videoRegex) || file.match(config.imageRegex)){
                 fs.unlink(thumbnailPath, function (err) {
                     if (err)
-                        util.log('unable to find/delete thumbnail: ' + err)
+                        util.log('unable to find/delete thumbnail: ' + err);
                     next();
                 });
             } else {
@@ -208,7 +208,7 @@ exports.deleteFile = function (req, res) {
         else
             return rest.sendSuccess(res, 'Deleted file successfully', file);
     });
-}
+};
 
 exports.updateAsset = function (req, res) {
 
@@ -229,13 +229,13 @@ exports.updateAsset = function (req, res) {
             function(next) {
                 Asset.findOne({name: oldName}, function(err, asset){
                     if (err || !asset) {
-                        util.log('unable to find asset from db,' + oldName)
+                        util.log('unable to find asset from db,' + oldName);
                         return next();
                     }
                     asset.name = newName;
                     asset.save(function(err) {
                         if (err)
-                            util.log('unable to save asset after rename,' + oldName)
+                            util.log('unable to save asset after rename,' + oldName);
                         next();
                     });
                 });
@@ -261,7 +261,7 @@ exports.updateAsset = function (req, res) {
             }
         });
     }
-}
+};
 
 exports.getCalendar = function (req, res) {
     var calFile = path.join(config.mediaDir, req.params['file']);
@@ -288,12 +288,12 @@ exports.getCalendar = function (req, res) {
             }
         });
     });
-}
+};
 
 exports.createAssetFileFromContent = function (name, data, cb) {
     var file = path.resolve(config.mediaDir, name);
     fs.writeFile(file, JSON.stringify(data, null, 4), cb);
-}
+};
 
 exports.updateCalendar = function (req, res) {
     var calFile = path.join(config.mediaDir,  req.params['file']);
@@ -310,10 +310,10 @@ exports.updateCalendar = function (req, res) {
                 return rest.sendSuccess(res, 'Successfully updated Email');
         });
     });
-}
+};
 
 exports.createLinkFile = function (req, res) {
-    var details = req.body.details;
+    let details = req.body.details;
 
     async.series([
         function (next) {
@@ -332,7 +332,7 @@ exports.createLinkFile = function (req, res) {
                 else
                     return rest.sendSuccess(res, 'Link file created for the link as ' + details.name + details.type);
         });
-}
+};
 
 exports.getLinkFileDetails = function (req, res) {
     var fileToRead = req.params['file'];
@@ -357,10 +357,10 @@ exports.getLinkFileDetails = function (req, res) {
             return rest.sendSuccess(res, 'link file details', retData);
         }
     });
-}
+};
 
 exports.updatePlaylist = function (req,res) {
     //req.body contain playlist name and assets, for deleted playlist send playlist name and empty assets
     require('./server-assets').updatePlaylist(req.body.playlist, req.body.assets);
     return rest.sendSuccess(res, 'asset update has been queued');
-}
+};
