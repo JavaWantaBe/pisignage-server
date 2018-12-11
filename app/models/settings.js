@@ -1,5 +1,5 @@
 var mongoose = require('mongoose'),
-    Schema = mongoose.Schema
+    Schema = mongoose.Schema;
 
 var SettingsSchema = new Schema({
     installation: {type: String , default: "local"},
@@ -18,7 +18,7 @@ var SettingsSchema = new Schema({
         user: {type: String , default: 'pi'},
         password: {type: String , default: 'pi'}
     }
-})
+});
 
-mongoose.model('Settings', SettingsSchema)
+mongoose.model('Settings', SettingsSchema);
 
