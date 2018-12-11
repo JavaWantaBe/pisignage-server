@@ -5,7 +5,7 @@ var path = require('path');
 
 var rootPath = process.cwd(),
     dataDir = path.join(rootPath, '/data'),
-    assetDir = path.join(rootPath, '/../media');
+    assetDir = path.join(rootPath, '/media');
 
 module.exports = {
     root: rootPath,
@@ -26,7 +26,7 @@ module.exports = {
     
     defaultPlaylist: "default",
 
-    logFile:                rootPath+ "/../forever_out.log",
+    logFile:                rootPath+ "/forever_out.log",
     logStoreDir:            assetDir+ "/_logs",
 
     mongo: {

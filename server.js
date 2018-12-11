@@ -28,6 +28,7 @@ db.connection.on('error',function(){
 
 // check system 
 require('./app/others/system-check')();
+
 // Bootstrap models
 var modelsPath = path.join(__dirname, 'app/models');
 fs.readdirSync(modelsPath).forEach(function (file) {

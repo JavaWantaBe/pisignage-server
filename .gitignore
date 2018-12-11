@@ -1,5 +1,6 @@
 .idea
 node_modules
+mongo_db_data
 
 public/app/bower_components
 data/sync_folders
@@ -9,3 +10,4 @@ data/licenses
 
 data/releases/package.json
 data/releases/server-package.json
+
