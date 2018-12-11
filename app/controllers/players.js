@@ -1,6 +1,6 @@
 'use strict';
 
-var mongoose = require('mongoose'),
+const mongoose = require('mongoose'),
     Player = mongoose.model('Player'),
     Group = mongoose.model('Group'),
     groups = require('./groups'),
@@ -10,50 +10,65 @@ var mongoose = require('mongoose'),
     async = require('async'),
     config = require('../../config/config');
 
-var oldSocketio = require('./server-socket'),
+const oldSocketio = require('./server-socket'),
     newSocketio = require('./server-socket-new'),
     licenses = require('./licenses');
 
-var installation,
+let installation,
     settings;
 
-var pipkgjson ={},
+let pipkgjson ={},
     pipkgjsonBeta = {},
     fs = require('fs');
 
-var readVersions = function() {
+let activePlayers = {},
+    lastCommunicationFromPlayers = {};
+
+let defaultGroup = {_id: 0, name: 'default'};
+
+let updatePlayerCount = {},
+    perDayCount = 20 * 24;
+
+let snapShotTimer = {};
+let pendingSnapshots = {};
+
+let pendingCommands = {};
+let shellCmdTimer = {};
+
+let readVersions = function() {
     try {
-        pipkgjson = JSON.parse(fs.readFileSync('data/releases/package.json', 'utf8'))
+        pipkgjson = JSON.parse(fs.readFileSync('data/releases/package.json', 'utf8'));
     } catch(e) {
         pipkgjson = {};
     }
     try {
-        pipkgjsonBeta = JSON.parse(fs.readFileSync('data/releases/package-beta.json', 'utf8'))
+        pipkgjsonBeta = JSON.parse(fs.readFileSync('data/releases/package-beta.json', 'utf8'));
     } catch(e) {
         pipkgjsonBeta = {};
     }
-}
-
-var activePlayers = {},
-    lastCommunicationFromPlayers = {};
+};
 
 readVersions();
 
 fs.mkdir(config.logStoreDir, function(err) {
     if (err && (err.code !== 'EEXIST')) {
-        console.log("Error creating logs directory, "+err.code)
+        console.log("Error creating logs directory, "+err.code);
     }
 });
 
+/**
+ *
+ */
 function checkPlayersWatchdog() {
-    var playerIds = Object.keys(activePlayers);
+    let playerIds = Object.keys(activePlayers);
+
     async.eachSeries(playerIds, function (playerId, cb) {
         if (!activePlayers[playerId]) {
             Player.findById(playerId, function (err, player) {
                 if (!err && player && player.isConnected) {
                     player.isConnected = false;
                     player.save();
-                    console.log("disconnect: "+player.installation+"-"+player.name+";reason: checkPlayersWatchdog")
+                    console.log("disconnect: "+player.installation+"-"+player.name+";reason: checkPlayersWatchdog");
                 }
                 delete activePlayers[playerId];
                 cb();
@@ -63,10 +78,11 @@ function checkPlayersWatchdog() {
             cb();
         }
     }, function (err) {
-        readVersions() //update version of software
+        readVersions(); //update version of software
         setTimeout(checkPlayersWatchdog, 600000);    //cleanup every 10 minutes
     });
 }
+
 
 Player.update({"isConnected": true},{$set:{"isConnected": false}},{ multi: true }, function(err, num) {
     if (!err && num)
@@ -74,17 +90,18 @@ Player.update({"isConnected": true},{$set:{"isConnected": false}},{ multi: true 
     checkPlayersWatchdog();
 });
 
-var defaultGroup = {_id: 0, name: 'default'};
-//create a default group if does not exist
+/**
+ * create a default group if does not exist
+ */
 licenses.getSettingsModel(function(err,data){
     settings = data;
-    installation = settings.installation || "local"
+    installation = settings.installation || "local";
 
     Group.update({name:"default"},{name:"default",description:"Default group for Players"},{upsert:true},function(err){
         fs.mkdir(path.join(config.syncDir,installation), function (err) {
             fs.mkdir(path.join(config.syncDir,installation, "default"), function (err) {
             });
-        })
+        });
         Group.findOne({name: 'default'}, function (err, data) {
             if (!err && data)
                 defaultGroup = data;
@@ -92,23 +109,29 @@ licenses.getSettingsModel(function(err,data){
     });
 });
 
+/**
+ *
+ * @param socketId
+ * @param reason
+ */
 exports.updateDisconnectEvent = function(socketId, reason) {
     Player.findOne({socket:socketId}, function(err,player) {
         if (!err && player) {
             player.isConnected = false;
             player.save();
             delete activePlayers[player._id.toString()];
-            console.log("disconnect: "+player.installation+"-"+player.name+";reason: "+reason)
+            console.log("disconnect: "+player.installation+"-"+player.name+";reason: "+reason);
         } else {
             //console.log("not able to find player for disconnect event: "+socketId);
         }
     });
 };
 
-var sendConfig = function (player, group, periodic) {
-    var retObj = {};
 
-    var groupPlaylists,
+let sendConfig = function (player, group, periodic) {
+    let retObj = {};
+
+    let groupPlaylists,
         groupAssets,
         groupTicker;
 
@@ -126,7 +149,7 @@ var sendConfig = function (player, group, periodic) {
     groupPlaylists = groupPlaylists || [];
     if (!player.version || player.version.charAt(0) === "0") {
         if (groupPlaylists[0] && groupPlaylists[0].name)
-            retObj.currentPlaylist = groupPlaylists[0].name
+            retObj.currentPlaylist = groupPlaylists[0].name;
         else
             retObj.currentPlaylist = groupPlaylists[0];
     } else {
@@ -167,8 +190,7 @@ var sendConfig = function (player, group, periodic) {
     retObj.loadPlaylistOnCompletion =  group.loadPlaylistOnCompletion || false;
     //if (!pipkgjson)
         //pipkgjson = JSON.parse(fs.readFileSync('data/releases/package.json', 'utf8'))
-    retObj.currentVersion = { version: pipkgjson.version, platform_version: pipkgjson.platform_version,
-        beta: pipkgjsonBeta.version}
+    retObj.currentVersion = { version: pipkgjson.version, platform_version: pipkgjson.platform_version, beta: pipkgjsonBeta.version };
     // retObj.gcal = {
     //     id: config.gCalendar.CLIENT_ID,
     //     token: config.gCalendar.CLIENT_SECRET
@@ -192,7 +214,6 @@ var sendConfig = function (player, group, periodic) {
 
 //Load a object
 exports.loadObject = function (req, res, next, id) {
-
     Player.load(id, function (err, object) {
         if (err || !object)
             return rest.sendError(res,'Unable to get group details',err);
@@ -203,11 +224,13 @@ exports.loadObject = function (req, res, next, id) {
     });
 };
 
-//list of objects
+/**
+ * list of objects
+ * @param req
+ * @param res
+ */
 exports.index = function (req, res) {
-
-    var criteria = {};
-
+    let criteria = {};
 
     if (req.query['group']) {
         criteria['group._id'] = req.query['group'];
@@ -237,10 +260,10 @@ exports.index = function (req, res) {
         criteria['version'] = req.query['version'];
     }
 
-    var page = req.query['page'] > 0 ? req.query['page'] : 0;
-    var perPage = req.query['per_page'] || 500;
+    let page = req.query['page'] > 0 ? req.query['page'] : 0;
+    let perPage = req.query['per_page'] || 500;
 
-    var options = {
+    let options = {
         perPage: perPage,
         page: page,
         criteria: criteria
@@ -252,7 +275,7 @@ exports.index = function (req, res) {
 
         objects = objects || [];
 
-        var data = {
+        let data = {
             objects: objects,
             page: page,
             pages: Math.ceil(objects.length / perPage),
@@ -264,8 +287,14 @@ exports.index = function (req, res) {
     });
 };
 
+/**
+ *
+ * @param req
+ * @param res
+ * @returns {*}
+ */
 exports.getObject = function (req, res) {
-    var object = req.object;
+    let object = req.object;
 
     if (object) {
         return rest.sendSuccess(res, 'Player details', object);
@@ -274,8 +303,13 @@ exports.getObject = function (req, res) {
     }
 };
 
+/**
+ *
+ * @param req
+ * @param res
+ */
 exports.createObject = function (req, res) {
-    var player;
+    let player;
 
     Player.findOne({cpuSerialNumber: req.body.cpuSerialNumber}, function (err, data) {
 
@@ -298,7 +332,7 @@ exports.createObject = function (req, res) {
         console.log(player);
         Group.findById(player.group._id, function(err,group) {
             if (!err && group) {
-                sendConfig(player,group,true)
+                sendConfig(player,group,true);
             } else {
                 console.log("unable to find group for the player");
             }
@@ -313,8 +347,13 @@ exports.createObject = function (req, res) {
     });
 };
 
+/**
+ *
+ * @param req
+ * @param res
+ */
 exports.updateObject = function (req, res) {
-    var object = req.object;
+    let object = req.object;
 
     if (req.body.group && req.object.group._id !== req.body.group._id) {
         req.body.registered = false;
@@ -322,7 +361,7 @@ exports.updateObject = function (req, res) {
     delete req.body.__v;        //do not copy version key
     async.series([
         function (next) {
-            var playerGroup = {
+            let playerGroup = {
                 name: "__player__"+ object.cpuSerialNumber,
                 installation: req.installation,
                 _id: object.selfGroupId
@@ -337,16 +376,16 @@ exports.updateObject = function (req, res) {
                 delete playerGroup._id;
                 groups.newGroup(playerGroup,function(err,data){
                     if (err) {
-                        console.log(err)
+                        console.log(err);
                     }
-                    req.body.group = data.toObject()
+                    req.body.group = data.toObject();
                     object.selfGroupId = data._id;
                     next();
                 });
             }
         },
         function (next) {
-            object = _.extend(object, req.body)
+            object = _.extend(object, req.body);
             object.save(function (err, data) {
                 if (err)
                     rest.sendError(res, 'Unable to update Player data', err);
@@ -358,7 +397,7 @@ exports.updateObject = function (req, res) {
 
             Group.findById(object.group._id, function (err, group) {
                 if (!err && group) {
-                    sendConfig(object, group, true)
+                    sendConfig(object, group, true);
                 } else {
                     console.log("unable to find group for the player");
                 }
@@ -368,8 +407,7 @@ exports.updateObject = function (req, res) {
 
 
 exports.deleteObject = function (req, res) {
-
-    var object = req.object,
+    let object = req.object,
         playerId = object.cpuSerialNumber;
     object.remove(function (err) {
         if (err)
@@ -379,9 +417,6 @@ exports.deleteObject = function (req, res) {
         }
     });
 };
-
-var updatePlayerCount = {},
-    perDayCount = 20 * 24;
 
 exports.updatePlayerStatus = function (obj) {
     var retObj = {};
@@ -401,7 +436,7 @@ exports.updatePlayerStatus = function (obj) {
                     delete obj.lastUpload;
                 if (!obj.name || obj.name.length === 0)
                     delete obj.name;
-                player = _.extend(data, obj)
+                player = _.extend(data, obj);
                 if (!player.isConnected) {
                     player.isConnected = true;
                 }
@@ -432,7 +467,7 @@ exports.updatePlayerStatus = function (obj) {
                     } else {
                         console.log("unable to find group for the player");
                     }
-                })
+                });
             }
             player.save(function (err, player) {
                 if (err) {
@@ -454,9 +489,11 @@ exports.secretAck = function (sid, status) {
     });
 };
 
-var pendingCommands = {};
-var shellCmdTimer = {};
-
+/**
+ *
+ * @param req
+ * @param res
+ */
 exports.shell = function (req, res) {
     var cmd = req.body.cmd;
     var object = req.object,
@@ -470,7 +507,7 @@ exports.shell = function (req, res) {
         delete shellCmdTimer[sid];
         if(pendingCommands[sid]){
             rest.sendSuccess(res,"Request Timeout",
-                { err: "Could not get response from the player,Make sure player is online and try again."})
+                { err: "Could not get response from the player,Make sure player is online and try again."});
             pendingCommands[sid] = null;
         }
     },60000);
@@ -479,7 +516,7 @@ exports.shell = function (req, res) {
 exports.shellAck = function (sid, response) {
 
     if (pendingCommands[sid]) {
-        clearTimeout(shellCmdTimer[sid])
+        clearTimeout(shellCmdTimer[sid]);
         delete shellCmdTimer[sid];
         rest.sendSuccess(pendingCommands[sid], 'Shell cmd response', response);
         pendingCommands[sid] = null;
@@ -487,18 +524,33 @@ exports.shellAck = function (sid, response) {
 
 };
 
+/**
+ *
+ * @param req
+ * @param res
+ * @returns {*}
+ */
 exports.swupdate = function (req, res) {
-    var object = req.object,
+    let object = req.object,
         version = req.body.version || null;
+
     if (!version) {
         version = 'piimage'+pipkgjson.version+'.zip';
     }
-    var socketio = (object.newSocketIo?newSocketio:oldSocketio);
+
+    let socketio = (object.newSocketIo?newSocketio:oldSocketio);
     socketio.emitMessage(object.socket, 'swupdate',version);
-    //console.log("updating to "+(version?version:'piimage'+pipkgjson.version+'.zip'));
+    console.log("updating to "+(version?version:'piimage'+pipkgjson.version+'.zip'));
+
     return rest.sendSuccess(res, 'SW update command issued');
 };
 
+/**
+ *
+ * @param cpuId
+ * @param filename
+ * @param data
+ */
 exports.upload = function (cpuId, filename, data) {
     Player.findOne({cpuSerialNumber: cpuId}, function (err, player) {
         if (player) {
@@ -520,7 +572,7 @@ exports.upload = function (cpuId, filename, data) {
                     logData.playerId = player._id.toString();
                 } catch (e) {
                     //corrupt file
-                    console.log(player.cpuSerialNumber)
+                    console.log(player.cpuSerialNumber);
                     console.log("corrupt log file: "+filename);
                 }
             } else if (path.extname(filename) === '.events') {
@@ -549,24 +601,30 @@ exports.upload = function (cpuId, filename, data) {
     });
 };
 
+/**
+ *
+ * @param req
+ * @param res
+ * @returns {*}
+ */
 exports.tvPower = function(req,res){
-    var status = req.body.status;
-    var object = req.object;
-    var socketio = (object.newSocketIo?newSocketio:oldSocketio);
+    let status = req.body.status;
+    let object = req.object;
+    let socketio = (object.newSocketIo?newSocketio:oldSocketio);
     socketio.emitMessage(object.socket,'cmd','tvpower',{off: status} );
     return rest.sendSuccess(res,'TV command issued');
 };
 
-
-
-var snapShotTimer = {};
-var pendingSnapshots = {};
-
+/**
+ *
+ * @param sid
+ * @param data
+ */
 exports.piScreenShot = function (sid,data) { // save screen shot in  _screenshots directory
-    var img =  Buffer.from(data.data,"base64").toString("binary"),
+    let img =  Buffer.from(data.data,"base64").toString("binary"),
         cpuId = data.playerInfo["cpuSerialNumber"];
 
-    clearTimeout(snapShotTimer[cpuId])
+    clearTimeout(snapShotTimer[cpuId]);
     delete snapShotTimer[cpuId];
 
     fs.writeFile(path.join(config.thumbnailDir,cpuId + '.jpeg'), img, 'binary',function (err) {
@@ -584,8 +642,13 @@ exports.piScreenShot = function (sid,data) { // save screen shot in  _screenshot
     });
 };
 
+/**
+ *
+ * @param req
+ * @param res
+ */
 exports.takeSnapshot = function (req, res) { // send socket.io event
-    var object = req.object,
+    let object = req.object,
         cpuId = object.cpuSerialNumber;
     if (pendingSnapshots[cpuId])
         rest.sendError(res, 'snapshot taking in progress');
@@ -597,7 +660,7 @@ exports.takeSnapshot = function (req, res) { // send socket.io event
                     lastTaken: stats ? stats.mtime : "NA"
                 }
             );
-        })
+        });
     } else {
         pendingSnapshots[cpuId] = res;
         snapShotTimer[cpuId] = setTimeout(function () {
@@ -610,11 +673,9 @@ exports.takeSnapshot = function (req, res) { // send socket.io event
                         lastTaken: stats ? stats.mtime : "NA"
                     }
                 );
-            })
+            });
         }, 60000);
         var socketio = (object.newSocketIo?newSocketio:oldSocketio);
         socketio.emitMessage(object.socket, 'snapshot');
     }
-}
-
-
+};

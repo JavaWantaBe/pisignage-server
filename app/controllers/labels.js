@@ -1,20 +1,16 @@
 'use strict';
 
 
-var mongoose = require('mongoose'),
-    Label = mongoose.model('Label'),
-
-    config = require('../../config/config'),
-
-    rest = require('../others/restware'),
-    _ = require('lodash'),
-
-    path = require('path'),
-    async = require('async');
+const mongoose = require('mongoose'),
+      Label = mongoose.model('Label'),
+      config = require('../../config/config'),
+      rest = require('../others/restware'),
+      _ = require('lodash'),
+      path = require('path'),
+      async = require('async');
 
 //Load a object
 exports.loadObject = function (req, res, next, id) {
-
     Label.load(id, function (err, object) {
         if (err || !object)
             return rest.sendError(res,'Unable to get group details',err);

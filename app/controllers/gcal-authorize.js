@@ -1,4 +1,4 @@
-'use strict;'
+'use strict';
 
 var GoogleStrategy = require('passport-google-oauth').OAuth2Strategy,
     passport = require('passport'),

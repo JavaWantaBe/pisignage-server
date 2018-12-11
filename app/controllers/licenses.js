@@ -127,18 +127,28 @@ exports.getSettingsModel = function(cb) {
     });
 };
 
+/**
+ *
+ * @param req
+ * @param res
+ */
 exports.getSettings = function(req,res) {
     exports.getSettingsModel(function (err, data) {
         if (err) {
             return rest.sendError(res, 'Unable to access Settings', err);
         } else {
-            var obj = data.toObject();
+            let obj = data.toObject();
             obj.serverIp = serverIp;
             return rest.sendSuccess(res, 'Settings', obj);
         }
     });
 };
 
+/**
+ *
+ * @param req
+ * @param res
+ */
 exports.updateSettings = function(req, res) {
     let restart = false;
 

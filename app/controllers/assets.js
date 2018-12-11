@@ -1,19 +1,23 @@
 'use strict';
 
-let fs = require('fs'),
-    path = require('path'),
-    async = require('async'),
-    util = require('util'),
-    _ = require('lodash'),
-    fileUtil = require('../others/file-util');
+const fs = require('fs'),
+      path = require('path'),
+      async = require('async'),
+      util = require('util'),
+      _ = require('lodash'),
+      fileUtil = require('../others/file-util');
 
-let mongoose = require('mongoose'),
-    Asset = mongoose.model('Asset'),
-    config = require('../../config/config'),
-    rest = require('../others/restware');
+const mongoose = require('mongoose'),
+      Asset = mongoose.model('Asset'),
+      config = require('../../config/config'),
+      rest = require('../others/restware');
 
+/**
+ *
+ * @param req
+ * @param res
+ */
 exports.index = function (req, res) {
-
     let files, dbdata;
 
     async.series([
@@ -45,12 +49,16 @@ exports.index = function (req, res) {
         else
             rest.sendSuccess(res, "Sending media directory files: ",
                 {files: files, dbdata: dbdata, systemAssets: config.systemAssets});
-
     });
 };
 
+/**
+ *
+ * @param req
+ * @param res
+ * @returns {*}
+ */
 exports.createFiles = function (req, res) {
-
     let files = [], data = [];
 
     if (req.files)
@@ -96,10 +104,20 @@ exports.createFiles = function (req, res) {
     });
 };
 
+/**
+ *
+ * @param req
+ * @param res
+ */
 exports.updateFileDetails = function (req, res) {
     require('./server-assets').storeDetails(req, res);
 };
 
+/**
+ *
+ * @param req
+ * @param res
+ */
 exports.getFileDetails = function (req, res) {
     var file = req.params['file'],
         fileData,
@@ -167,6 +185,11 @@ exports.getFileDetails = function (req, res) {
     });
 };
 
+/**
+ *
+ * @param req
+ * @param res
+ */
 exports.deleteFile = function (req, res) {
 
     var file = req.params['file'],
@@ -210,6 +233,11 @@ exports.deleteFile = function (req, res) {
     });
 };
 
+/**
+ *
+ * @param req
+ * @param res
+ */
 exports.updateAsset = function (req, res) {
 
     if (req.body.newname) {
@@ -290,13 +318,24 @@ exports.getCalendar = function (req, res) {
     });
 };
 
+/**
+ *
+ * @param name
+ * @param data
+ * @param cb
+ */
 exports.createAssetFileFromContent = function (name, data, cb) {
-    var file = path.resolve(config.mediaDir, name);
+    let file = path.resolve(config.mediaDir, name);
     fs.writeFile(file, JSON.stringify(data, null, 4), cb);
 };
 
+/**
+ *
+ * @param req
+ * @param res
+ */
 exports.updateCalendar = function (req, res) {
-    var calFile = path.join(config.mediaDir,  req.params['file']);
+    let calFile = path.join(config.mediaDir,  req.params['file']);
 
     fs.readFile(calFile, 'utf8', function (err, data) {
         if (err || !data)
@@ -312,6 +351,11 @@ exports.updateCalendar = function (req, res) {
     });
 };
 
+/**
+ *
+ * @param req
+ * @param res
+ */
 exports.createLinkFile = function (req, res) {
     let details = req.body.details;
 
@@ -334,10 +378,14 @@ exports.createLinkFile = function (req, res) {
         });
 };
 
+/**
+ *
+ * @param req
+ * @param res
+ */
 exports.getLinkFileDetails = function (req, res) {
-    var fileToRead = req.params['file'];
-
-    var retData = {};
+    let fileToRead = req.params['file'];
+    let retData = {};
 
     async.series([
         function (next) {
@@ -359,6 +407,12 @@ exports.getLinkFileDetails = function (req, res) {
     });
 };
 
+/**
+ *
+ * @param req
+ * @param res
+ * @returns {*}
+ */
 exports.updatePlaylist = function (req,res) {
     //req.body contain playlist name and assets, for deleted playlist send playlist name and empty assets
     require('./server-assets').updatePlaylist(req.body.playlist, req.body.assets);
