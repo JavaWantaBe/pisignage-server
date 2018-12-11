@@ -1,9 +1,8 @@
 /**
  * Module dependencies.
  */
-
-var mongoose = require('mongoose'),
-    Schema = mongoose.Schema;
+const mongoose = require('mongoose'),
+      Schema = mongoose.Schema;
 
 /**
  * Setters and Getters
@@ -12,7 +11,7 @@ var mongoose = require('mongoose'),
 /**
  * Post Schema
  */
-var LabelSchema= new Schema({
+let LabelSchema= new Schema({
     name:                   {type: String, unique: true, index: true},
     mode:                   {type: String},
 
@@ -36,7 +35,6 @@ LabelSchema.path('name').validate(function (name) {
 /**
  * Statics
  */
-
 LabelSchema.statics = {
     /**
      * Find article by id
@@ -60,7 +58,7 @@ LabelSchema.statics = {
      */
 
     list: function (options, cb) {
-        var criteria = options.criteria || {};
+        let criteria = options.criteria || {};
 
         this.find(criteria)
             .sort({name: 1}) // sort by date

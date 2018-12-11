@@ -1,7 +1,7 @@
-var mongoose = require('mongoose'),
-    Schema = mongoose.Schema
+const mongoose = require('mongoose'),
+      Schema = mongoose.Schema;
 
-var PlayerSchema = new Schema({
+let PlayerSchema = new Schema({
     name:                   String,
     group:                  {_id: {type: Schema.ObjectId, ref: 'Group', index: true},
                                         name: {type: String, default: 'default'}},
@@ -48,7 +48,6 @@ var PlayerSchema = new Schema({
 });
 
 
-
 PlayerSchema.path('cpuSerialNumber').validate(function (name) {
     return name.length > 0;
 }, 'cpuSerialNumber cannot be blank');
@@ -60,7 +59,7 @@ PlayerSchema.statics = {
     },
 
     list: function (options, cb) {
-        var criteria = options.criteria || {};
+        let criteria = options.criteria || {};
 
         this.find(criteria)
             .sort({name: 1}) // sort by date

@@ -1,10 +1,13 @@
-var async = require('async'),
-	fs = require('fs'),
-	config = require('../../config/config'),
-	exec = require('child_process').exec;
+const async = require('async'),
+	  fs = require('fs'),
+	  config = require('../../config/config'),
+	  exec = require('child_process').exec;
 
+/**
+ *
+ */
 module.exports = function(){
-	var errors = 0;
+	let errors = 0;
 
     async.series([
 		function(cb){
@@ -46,7 +49,7 @@ module.exports = function(){
 					console.log('****************************************************************');
 					console.log('*  Please install ffmpeg, videos cannot be uploaded otherwise  *');
 					console.log('****************************************************************\n');
-                    console.log(err)
+                    console.log(err);
                     errors++;
                 }
 				cb();
@@ -58,7 +61,7 @@ module.exports = function(){
 					console.log('*********************************************************************');
 					console.log('* Please install imagemagik, otherwise thumbnails cannot be created *');
 					console.log('*********************************************************************\n');
-                    console.log(err)
+                    console.log(err);
                     errors++;
                 }
 				cb();

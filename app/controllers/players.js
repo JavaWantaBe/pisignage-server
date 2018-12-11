@@ -212,12 +212,17 @@ let sendConfig = function (player, group, periodic) {
     socketio.emitMessage(player.socket, 'config', retObj);
 };
 
-//Load a object
+/**
+ * Load a object
+ * @param req
+ * @param res
+ * @param next
+ * @param id
+ */
 exports.loadObject = function (req, res, next, id) {
     Player.load(id, function (err, object) {
         if (err || !object)
             return rest.sendError(res,'Unable to get group details',err);
-
 
         req.object = object;
         next();
@@ -281,8 +286,13 @@ exports.index = function (req, res) {
             pages: Math.ceil(objects.length / perPage),
             count: objects.length
         };
-        data.currentVersion = {version: pipkgjson.version, platform_version: pipkgjson.platform_version,
-                    beta: pipkgjsonBeta.version};
+
+        data.currentVersion = {
+            version: pipkgjson.version,
+            platform_version: pipkgjson.platform_version,
+            beta: pipkgjsonBeta.version
+        };
+
         return rest.sendSuccess(res, 'sending Player list', data);
     });
 };
@@ -314,7 +324,7 @@ exports.createObject = function (req, res) {
     Player.findOne({cpuSerialNumber: req.body.cpuSerialNumber}, function (err, data) {
 
         if (err) {
-            console.log("Error while retriving player data: " + err);
+            console.log("ERROR: while retrieving player data: " + err);
         }
 
         if (data) {
@@ -334,14 +344,14 @@ exports.createObject = function (req, res) {
             if (!err && group) {
                 sendConfig(player,group,true);
             } else {
-                console.log("unable to find group for the player");
+                console.log("ERROR: unable to find group for the player");
             }
         });
         player.save(function (err, obj) {
             if (err) {
-                return rest.sendError(res, 'Error in saving new Player', err || "");
+                return rest.sendError(res, 'ERROR: in saving new player', err || "");
             } else {
-                return rest.sendSuccess(res, 'new Player added successfully', obj);
+                return rest.sendSuccess(res, 'SUCCESS: new player added successfully', obj);
             }
         });
     });
@@ -388,9 +398,9 @@ exports.updateObject = function (req, res) {
             object = _.extend(object, req.body);
             object.save(function (err, data) {
                 if (err)
-                    rest.sendError(res, 'Unable to update Player data', err);
+                    rest.sendError(res, 'ERROR: unable to update player data', err);
                 else
-                    rest.sendSuccess(res, 'updated Player details', data);
+                    rest.sendSuccess(res, 'SUCCESS: updated player details', data);
                 next();
             });
         }], function() {
@@ -399,25 +409,33 @@ exports.updateObject = function (req, res) {
                 if (!err && group) {
                     sendConfig(object, group, true);
                 } else {
-                    console.log("unable to find group for the player");
+                    console.log("ERROR: unable to find group for the player");
                 }
             });
     });
 };
 
-
+/**
+ *
+ * @param req
+ * @param res
+ */
 exports.deleteObject = function (req, res) {
     let object = req.object,
         playerId = object.cpuSerialNumber;
     object.remove(function (err) {
         if (err)
-            return rest.sendError(res, 'Unable to remove Player record', err);
+            return rest.sendError(res, 'ERROR: unable to remove player record', err);
         else {
-            return rest.sendSuccess(res, 'Player record deleted successfully');
+            return rest.sendSuccess(res, 'SUCCESS: player record deleted successfully');
         }
     });
 };
 
+/**
+ *
+ * @param obj
+ */
 exports.updatePlayerStatus = function (obj) {
     var retObj = {};
 
@@ -428,9 +446,10 @@ exports.updatePlayerStatus = function (obj) {
 
     Player.findOne({cpuSerialNumber: obj.cpuSerialNumber}, function (err, data) {
         if (err) {
-            console.log("Error while retriving player data: " + err);
+            console.log("ERROR: while retrieving player data: " + err);
         } else {
-            var player;
+            let player;
+
             if (data) {
                 if (!obj.lastUpload || (obj.lastUpload < data.lastUpload))
                     delete obj.lastUpload;
@@ -454,7 +473,7 @@ exports.updatePlayerStatus = function (obj) {
             if (!player.registered || obj.request ) {
                 Group.findById(player.group._id, function (err, group) {
                     if (!err && group) {
-                        var now = Date.now(),
+                        let now = Date.now(),
                             pid = player._id.toString();
                         //throttle messages
                         if (!lastCommunicationFromPlayers[pid] || (now - lastCommunicationFromPlayers[pid]) > 60000 ||
@@ -465,26 +484,31 @@ exports.updatePlayerStatus = function (obj) {
                             //console.log("communication to "+player.name+" at "+now+", last "+ lastCommunicationFromPlayers[pid]+" did not happen")
                         }
                     } else {
-                        console.log("unable to find group for the player");
+                        console.log("ERROR: unable to find group for the player");
                     }
                 });
             }
             player.save(function (err, player) {
                 if (err) {
-                    return console.log("Error while saving player status: " + err);
+                    return console.log("ERROR: while saving player status: " + err);
                 }
             });
         }
     });
 };
 
+/**
+ *
+ * @param sid
+ * @param status
+ */
 exports.secretAck = function (sid, status) {
     Player.findOne({socket: sid}, function (err, player) {
         if (!err && player) {
             player.registered = status;
             player.save();
         } else {
-            console.log("not able to find player");
+            console.log("ERROR: not able to find player");
         }
     });
 };
@@ -495,16 +519,18 @@ exports.secretAck = function (sid, status) {
  * @param res
  */
 exports.shell = function (req, res) {
-    var cmd = req.body.cmd;
-    var object = req.object,
+    let cmd = req.body.cmd;
+    let object = req.object,
         sid = object.socket;
-    pendingCommands[sid] = res;
-    var socketio = (object.newSocketIo?newSocketio:oldSocketio);
+        pendingCommands[sid] = res;
+    let socketio = (object.newSocketIo?newSocketio:oldSocketio);
+
     socketio.emitMessage(sid, 'shell', cmd);
 
     clearTimeout(shellCmdTimer[sid]);
     shellCmdTimer[sid] = setTimeout(function(){
         delete shellCmdTimer[sid];
+
         if(pendingCommands[sid]){
             rest.sendSuccess(res,"Request Timeout",
                 { err: "Could not get response from the player,Make sure player is online and try again."});
@@ -513,8 +539,12 @@ exports.shell = function (req, res) {
     },60000);
 };
 
+/**
+ *
+ * @param sid
+ * @param response
+ */
 exports.shellAck = function (sid, response) {
-
     if (pendingCommands[sid]) {
         clearTimeout(shellCmdTimer[sid]);
         delete shellCmdTimer[sid];
@@ -554,12 +584,12 @@ exports.swupdate = function (req, res) {
 exports.upload = function (cpuId, filename, data) {
     Player.findOne({cpuSerialNumber: cpuId}, function (err, player) {
         if (player) {
-            var logData;
+            let logData;
 
             if(filename.indexOf('forever_out') === 0 ){
                 fs.writeFile(config.logStoreDir+'/'+cpuId+'_forever_out.log',data,function(err){
                     if(err) {
-                        console.log("error", "Error in writing forever_out log for " + cpuId);
+                        console.log("error", "ERROR: in writing forever_out log for " + cpuId);
                         console.log(err);
                     }
                     // else
@@ -573,12 +603,12 @@ exports.upload = function (cpuId, filename, data) {
                 } catch (e) {
                     //corrupt file
                     console.log(player.cpuSerialNumber);
-                    console.log("corrupt log file: "+filename);
+                    console.log("ERROR: corrupt log file: " + filename);
                 }
             } else if (path.extname(filename) === '.events') {
-                var lines = data.split('\n'),
+                let lines = data.split('\n'),
                     events = [];
-                for (var i = 0; i < lines.length; i++) {
+                for (let i = 0; i < lines.length; i++) {
                     //console.log(lines[i]);
                     try {
                         logData = JSON.parse(lines[i]);
@@ -593,7 +623,8 @@ exports.upload = function (cpuId, filename, data) {
                     }
                 }
             }
-            var socketio = (player.newSocketIo?newSocketio:oldSocketio);
+
+            let socketio = (player.newSocketIo?newSocketio:oldSocketio);
             socketio.emitMessage(player.socket, 'upload_ack', filename);
         } else {
             console.log("ignoring file upload: " + filename);
@@ -675,7 +706,8 @@ exports.takeSnapshot = function (req, res) { // send socket.io event
                 );
             });
         }, 60000);
-        var socketio = (object.newSocketIo?newSocketio:oldSocketio);
+
+        let socketio = (object.newSocketIo?newSocketio:oldSocketio);
         socketio.emitMessage(object.socket, 'snapshot');
     }
 };

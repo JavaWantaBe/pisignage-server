@@ -1,21 +1,28 @@
 'use strict';
 
-var path = require('path'),
-    FFmpeg = require('fluent-ffmpeg'),
-    probe = require('node-ffprobe'),
-    imageMagick = require('gm').subClass({imageMagick: true}),
-    config = require('../../config/config'),
-    fs = require('fs'),
-    async = require('async'),
-    mongoose = require('mongoose'),
-    Asset = mongoose.model('Asset'),
-    _ = require('lodash');
+const path = require('path'),
+      FFmpeg = require('fluent-ffmpeg'),
+      probe = require('node-ffprobe'),
+      imageMagick = require('gm').subClass({imageMagick: true}),
+      config = require('../../config/config'),
+      fs = require('fs'),
+      async = require('async'),
+      mongoose = require('mongoose'),
+      Asset = mongoose.model('Asset'),
+      _ = require('lodash');
 
+/**
+ *
+ * @param filename
+ * @param filesize
+ * @param categories
+ * @param cb
+ */
 exports.processFile = function (filename, filesize, categories, cb) {
-    var errorMessages = [],
+    let errorMessages = [],
         assetDir = path.join(config.mediaDir);
 
-    var src = path.join(assetDir, filename),
+    let src = path.join(assetDir, filename),
         ext = path.extname(filename),
         destName = path.basename(filename, ext) + '_c.mp4',
         destPath = path.join(assetDir, destName),
@@ -51,14 +58,14 @@ exports.processFile = function (filename, filesize, categories, cb) {
                                     if(err)
                                         console.log("Image resize error for : "+src +"  "+err);
                                     img_cb();
-                                })
+                                });
                         },
                         function (img_cb) {
                             imageMagick(src).filesize(function(err,value){
                                 if (value)
                                     mediaSize = value;
                                 img_cb();
-                            })
+                            });
                         },
                         function (img_cb) {
                             imageMagick(src).size(function (err, value) {
@@ -70,10 +77,11 @@ exports.processFile = function (filename, filesize, categories, cb) {
                         }
                     ], function () {
                         task_cb();
-                    })
+                    });
                 } else if (filename.match(config.videoRegex)) {
+                    let filePath = src;
+
                     type = 'video';
-                    var filePath = src;
                     async.series([
                         function (video_cb) {
                             probe(src, function (err, metadata) {
@@ -83,9 +91,9 @@ exports.processFile = function (filename, filesize, categories, cb) {
                                     var formatName;
                                     if (metadata.format)
                                         formatName = metadata.format.format_name;
-                                    if ((vdoInfo && vdoInfo.codec_name != 'h264') ||
-                                        (formatName.indexOf('mp4') == -1) ||
-                                        (vdoInfo && vdoInfo.pix_fmt == 'yuv422p')
+                                    if ((vdoInfo && vdoInfo.codec_name !== 'h264') ||
+                                        (formatName.indexOf('mp4') === -1) ||
+                                        (vdoInfo && vdoInfo.pix_fmt === 'yuv422p')
                                     ) {
                                         new FFmpeg({source: src})
                                             .audioCodec('libfdk_aac')
@@ -113,7 +121,7 @@ exports.processFile = function (filename, filesize, categories, cb) {
                                                     filename = destName;
                                                     filePath = destPath;
                                                     video_cb();
-                                                })
+                                                });
                                             })
                                             .saveToFile(destPath);
                                     } else {
@@ -136,23 +144,24 @@ exports.processFile = function (filename, filesize, categories, cb) {
                                         resolution = {
                                             width: vdoInfo.width,
                                             height: vdoInfo.height
-                                        }
+                                        };
                                     }
                                 }
                                 video_cb();
                             });
                         },
                         function (video_cb) {
-                            var snaptime = duration >= 10 ? 8 : 2;
+                            let snaptime = duration >= 10 ? 8 : 2;
+
                             new FFmpeg({source: filePath})
                                 .on('error', function (err) {
                                     console.log('ffmpeg, An error occurred: ' + err.message);
                                     errorMessages.push(err.message);
-                                    video_cb()
+                                    video_cb();
                                 })
                                 .on('end', function (filenames) {
                                     thumbnail = "/media/_thumbnails/" + random+filename + '.png';
-                                    video_cb()
+                                    video_cb();
                                 })
                                 .takeScreenshots({
                                     size: '64x64',
@@ -163,14 +172,15 @@ exports.processFile = function (filename, filesize, categories, cb) {
                         }
                     ], function () {
                         task_cb();
-                    })
+                    });
                 } else if (filename.match(config.audioRegex)) {
-                    type = 'audio'
-                    var filePath = src;
+                    let filePath = src;
+
+                    type = 'audio';
                     probe(filePath, function (err, metadata) {
                         //console.log(err, metadata);
                         if (err) {
-                            console.log('Error getting audio file info ')
+                            console.log('Error getting audio file info ');
                             errorMessages.push(err.message);
                         } else {
                             duration = metadata.format.duration;
@@ -178,7 +188,7 @@ exports.processFile = function (filename, filesize, categories, cb) {
                                 mediaSize = parseInt(metadata.format.size / 1000) + 'KB';
                         }
                         task_cb();
-                    })
+                    });
                 } else {
                     if (filename.match(config.noticeRegex))
                         type = 'notice';
@@ -194,7 +204,7 @@ exports.processFile = function (filename, filesize, categories, cb) {
             }],
         function (err) {
             Asset.findOne({name: filename}, function (err, data) {
-                var asset,
+                let asset,
                     object = {
                         name: filename,
                         type: type,
@@ -211,20 +221,20 @@ exports.processFile = function (filename, filesize, categories, cb) {
                 if (err || !data) {
                     asset = new Asset(object);
                 } else {
-                    asset = _.extend(data, object)
+                    asset = _.extend(data, object);
                 }
                 asset.save(function (err) {
                     if (err)
                         errorMessages = errorMessages.push(err);
                     if (errorMessages.length > 0) {
-                        console.log('store details(media processing) error messages: '+filename)
+                        console.log('store details(media processing) error messages: '+filename);
                         console.log(errorMessages.join());
                     } else {
-                        console.log('Successfully processed file: '+filename)
+                        console.log('Successfully processed file: '+filename);
                     }
                     cb();
-                })
-            })
+                });
+            });
         }
-    )
-}
+    );
+};

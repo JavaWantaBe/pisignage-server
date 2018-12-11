@@ -1,11 +1,10 @@
-var fs = require('fs'),
-    sanitizeHtml = require('sanitize-html'),
-    path = require('path'),
-    
-    library = '\n<script src="../piSignagePro/templates/screen.min.js"></script>\n';
+const fs = require('fs'),
+      sanitizeHtml = require('sanitize-html'),
+      path = require('path'),
+      library = '\n<script src="../piSignagePro/templates/screen.min.js"></script>\n';
 
 exports.modifyHTML = function(assetsDir,templateName){
-	var closingBodyIndex,
+	let closingBodyIndex,
         modifiedData,
         sanitize,
         templatePath;
@@ -38,4 +37,4 @@ exports.modifyHTML = function(assetsDir,templateName){
             // template modification successful
         });
     });
-}
+};

@@ -1,7 +1,7 @@
-var mongoose = require('mongoose'),
-    Schema = mongoose.Schema;
+const mongoose = require('mongoose'),
+      Schema = mongoose.Schema;
 
-var SettingsSchema = new Schema({
+let SettingsSchema = new Schema({
     installation: {type: String , default: "local"},
     newLayoutsEnable: {type: Boolean , default: false},
     systemMessagesHide: {type: Boolean, default: false},

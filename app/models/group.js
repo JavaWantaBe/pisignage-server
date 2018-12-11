@@ -1,7 +1,7 @@
-var mongoose = require('mongoose'),
-    Schema = mongoose.Schema;
+const mongoose = require('mongoose'),
+      Schema = mongoose.Schema;
 
-var GroupSchema = new Schema({
+let GroupSchema = new Schema({
     name:                   {type: String,index: true},
     description:            String,
 
@@ -74,7 +74,7 @@ GroupSchema.statics = {
     },
 
     list: function (options, cb) {
-        var criteria = options.criteria || {};
+        let criteria = options.criteria || {};
 
         if (!criteria.all) {
             criteria.name = {"$not": /__player__/};
