@@ -1,18 +1,18 @@
 'use strict';
 
 const mongoose = require('mongoose'),
-    Player = mongoose.model('Player'),
-    Group = mongoose.model('Group'),
-    groups = require('./groups'),
-    rest = require('../others/restware'),
-    _ = require('lodash'),
-    path = require('path'),
-    async = require('async'),
-    config = require('../../config/config');
+      Player = mongoose.model('Player'),
+      Group = mongoose.model('Group'),
+      groups = require('./groups'),
+      rest = require('../others/restware'),
+      _ = require('lodash'),
+      path = require('path'),
+      async = require('async'),
+      config = require('../../config/config');
 
 const oldSocketio = require('./server-socket'),
-    newSocketio = require('./server-socket-new'),
-    licenses = require('./licenses');
+      newSocketio = require('./server-socket-new'),
+      licenses = require('./licenses');
 
 let installation,
     settings;
@@ -41,6 +41,7 @@ let readVersions = function() {
     } catch(e) {
         pipkgjson = {};
     }
+
     try {
         pipkgjsonBeta = JSON.parse(fs.readFileSync('data/releases/package-beta.json', 'utf8'));
     } catch(e) {
@@ -52,7 +53,7 @@ readVersions();
 
 fs.mkdir(config.logStoreDir, function(err) {
     if (err && (err.code !== 'EEXIST')) {
-        console.log("Error creating logs directory, "+err.code);
+        console.log("Error creating logs directory, "+ err.code);
     }
 });
 

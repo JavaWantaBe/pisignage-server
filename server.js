@@ -1,28 +1,29 @@
-'use strict';
+"use strict";
 
 // Default node environment to development
-process.env.NODE_ENV = process.env.NODE_ENV || 'development';
+process.env.NODE_ENV = process.env.NODE_ENV || "development";
 
-var express = require('express'),
-    oldSocketio = require('919.socket.io'),
-    socketio = require('socket.io'),
-    mongoose= require('mongoose');
+const express = require("express"),
+      oldSocketio = require("919.socket.io"),
+      socketio = require("socket.io");
 
-var path = require('path'),
-    fs = require('fs');
+let mongoose = require('mongoose');
+
+const path = require('path'),
+      fs = require('fs');
 
 // Application Config
-var config = require(path.join(__dirname,'/config/config'));
+const config = require(path.join(__dirname,'/config/config'));
 
 // Connect to database
 mongoose.Promise = global.Promise;
-var db = mongoose.connect(config.mongo.uri, config.mongo.options);
 
-db.connection.on('error',function(){
+let db = mongoose.connect(config.mongo.uri, config.mongo.options);
+
+db.connection.on("error",function() {
     console.log('********************************************');
     console.log('*          MongoDB Process not running     *');
     console.log('********************************************\n');
-
     process.exit(1);
 });
 
@@ -30,7 +31,9 @@ db.connection.on('error',function(){
 require('./app/others/system-check')();
 
 // Bootstrap models
-var modelsPath = path.join(__dirname, 'app/models');
+let modelsPath = path.join(__dirname, 'app/models');
+
+//
 fs.readdirSync(modelsPath).forEach(function (file) {
     require(modelsPath + '/' + file);
 });

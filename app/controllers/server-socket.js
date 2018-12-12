@@ -1,15 +1,15 @@
-'use strict';
+"use strict";
 
-var iosockets = null;     //holds all the clients io.sockets
+let iosockets = null;     //holds all the clients io.sockets
 
-var players = require('./players'),
-    _ = require('lodash');
+const players = require('./players'),
+      _ = require('lodash');
 
-var handleClient = function (socket) {
 
-    //console.log("connection with 0.9.19 socket.io : "+socket.id);
+let handleClient = function (socket) {
+    console.log("connection with 0.9.19 socket.io : " + socket.id);
     socket.on('status', function (settings, status, priority) {
-        var statusObject = _.extend(
+        let statusObject = _.extend(
             {
                 lastReported: Date.now(),
                 ip: socket.handshake.headers['x-forwarded-for'] || socket.handshake.address.address,
@@ -41,19 +41,27 @@ var handleClient = function (socket) {
 
     socket.on('disconnect', function (reason) {
         players.updateDisconnectEvent(socket.id,reason);
-        //console.log("disconnect event: "+socket.id);
+        console.log("disconnect event: " + socket.id);
     });
 };
 
+/**
+ *
+ * @param io
+ */
 exports.startSIO = function (io) {
     io.sockets.on('connection', handleClient);
     io.set('log level', 0);
     iosockets = io.sockets;
 };
 
+/**
+ *
+ * @param sid
+ */
 exports.emitMessage = function (sid) {
     if (iosockets.sockets[sid]) {
-        var args = Array.prototype.slice.call(arguments,1);
+        let args = Array.prototype.slice.call(arguments,1);
         iosockets.sockets[sid].emit.apply(iosockets.sockets[sid], args);
     }
 };

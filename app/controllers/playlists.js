@@ -1,12 +1,12 @@
 'use strict';
 
-var config = require('../../config/config'),
-    rest = require('../others/restware'),
-    fs = require('fs'),
-    path = require('path'),
-    async = require('async');
+const config = require('../../config/config'),
+      rest = require('../others/restware'),
+      fs = require('fs'),
+      path = require('path'),
+      async = require('async');
 
-var systemPlaylists = [
+let systemPlaylists = [
     {
         name:"TV_OFF" ,
         settings: {},
@@ -16,54 +16,86 @@ var systemPlaylists = [
     }
 ];
 
-var isPlaylist = function (file) {
+let isPlaylist = function (file) {
     return (file.charAt(0) === '_' && file.charAt(1) === '_' && file.slice(-5) === ".json");
 };
 
+/**
+ *
+ * @param playlist
+ * @param cb
+ */
 exports.newPlaylist = function ( playlist, cb) {
-    var file = path.join(config.mediaDir, ("__" + playlist + '.json')),
-        data = {name:playlist,settings:{ticker:{enable:false,behavior: 'scroll', textSpeed: 3, rss: { enable: false , link: null, feedDelay:10 }},
-                ads:{adPlaylist:false,adCount:1,adInterval:60},
-                audio: {enable: false,random: false,volume: 50}
+    let file = path.join(config.mediaDir, ("__" + playlist + '.json')),
+        data = {
+            name:playlist,
+            settings:{
+                ticker:{
+                    enable:false,behavior: 'scroll',
+                    textSpeed: 3,
+                    rss: {
+                        enable: false ,
+                        link: null,
+                        feedDelay:10
+                    }
+                },
+                ads:{
+                    adPlaylist: false,
+                    adCount: 1,
+                    adInterval:60
+                },
+                audio: {
+                    enable: false,
+                    random: false,
+                    volume: 50
+                }
             },
-            assets:[],layout:'1',
+            assets:[],
+            layout:'1',
             templateName:"custom_layout.html",
             schedule:{}
     };
-
 
     fs.writeFile(file, JSON.stringify(data, null, 4), function (err) {
         cb(err,data);
     });
 };
 
+/**
+ *
+ * @param req
+ * @param res
+ */
 exports.index = function (req, res) {
 
-    var assetDir = path.join(config.mediaDir);
+    const assetDir = path.join(config.mediaDir);
 
     fs.readdir(assetDir, function (err, files) {
         if (err) {
             return rest.sendError(res, 'directory read error', err);
         } else {
-            var playlists = files.filter(isPlaylist),
+            let playlists = files.filter(isPlaylist),
                 list = [];
 
-            var readFile = function (plfile, cb) {
-                var playlist = {
+            let readFile = function (plfile, cb) {
+                let playlist = {
                     settings: {},
                     assets: [],
                     name: path.basename(plfile, '.json').slice(2)
                 };
+
                 fs.readFile(path.join(assetDir, plfile), 'utf8', function (err, data) {
                     if (err || !data)
                         list.push(playlist);
                     else {
-                        var obj = {};
+                        let obj = {};
+
                         try {
                             obj = JSON.parse(data);
                         } catch (e) {
                             console.log("playlist index parsing error for " + req.installation);
                         }
+
                         playlist.settings = obj.settings || {};
                         playlist.assets = obj.assets || [];
                         playlist.layout = obj.layout || '1';
@@ -90,18 +122,24 @@ exports.index = function (req, res) {
 
 };
 
+/**
+ *
+ * @param req
+ * @param res
+ * @returns {*}
+ */
 exports.getPlaylist = function (req, res) {
 
     if (req.query['file'] === "TV_OFF")
         return rest.sendError(res, 'System Playlist, can not be edited');
 
-    var file = path.join(config.mediaDir,  ("__" + req.params['file'] + '.json'));
+    const file = path.join(config.mediaDir,  ("__" + req.params['file'] + '.json'));
 
     fs.readFile(file, 'utf8', function (err, data) {
         if (err) {
             return rest.sendError(res, 'playlist file read error', err);
         } else {
-            var playlist = {
+            let playlist = {
                 settings: {},
                 layout: '1',
                 assets: [],
@@ -110,11 +148,12 @@ exports.getPlaylist = function (req, res) {
                 templateName: "custom_layout.html"
             };
             if (data) {
-                var obj = {};
+                let obj = {};
+
                 try {
                     obj = JSON.parse(data);
                 } catch (e) {
-                    console.log("getPlaylist parsing error for " + req.installation)
+                    console.log("getPlaylist parsing error for " + req.installation);
                 }
                 playlist.settings = obj.settings || {};
                 playlist.assets = obj.assets || [];
@@ -130,6 +169,11 @@ exports.getPlaylist = function (req, res) {
     });
 };
 
+/**
+ *
+ * @param req
+ * @param res
+ */
 exports.createPlaylist = function (req, res) {
 
     exports.newPlaylist(req.body['file'], function (err,data) {
@@ -141,9 +185,14 @@ exports.createPlaylist = function (req, res) {
     });
 };
 
+/**
+ *
+ * @param req
+ * @param res
+ */
 exports.savePlaylist = function (req, res) {
 
-    var file = path.join(config.mediaDir,  ("__" + req.params['file'] + '.json'));
+    const file = path.join(config.mediaDir,  ("__" + req.params['file'] + '.json'));
 
     fs.readFile(file, 'utf8', function (err, data) {
         if (err && (err.code === 'ENOENT') && req.params['file'] === "TV_OFF") {
@@ -151,7 +200,7 @@ exports.savePlaylist = function (req, res) {
             err = null;
         }
         if (err) {
-            rest.sendError(res, "Playlist file read error", err)
+            rest.sendError(res, "Playlist file read error", err);
         } else {
             var fileData = {}, dirty = false;
             fileData.version = 0;

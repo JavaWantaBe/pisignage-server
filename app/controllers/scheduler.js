@@ -1,29 +1,32 @@
 var scheduler = require('node-schedule'),
     dayScheduler;
 
-var http = require('http'),
-    fs = require('fs'),
-    path = require('path'),
-    async = require('async'),
-    config = require('../../config/config'),
-    serverFile = path.join(config.releasesDir,"server-package.json"),
-    packageJsonFile = path.join(config.releasesDir,"package.json")
+const http = require('http'),
+      fs = require('fs'),
+      path = require('path'),
+      async = require('async'),
+      config = require('../../config/config'),
+      serverFile = path.join(config.releasesDir,"server-package.json"),
+      packageJsonFile = path.join(config.releasesDir,"package.json");
 
-var download = function(url, dest, cb) {
-    var file = fs.createWriteStream(dest);
-    var request = http.get(url, function(response) {
-        console.log("Downloading "+url)
+let download = function(url, dest, cb) {
+    let file = fs.createWriteStream(dest);
+    let request = http.get(url, function(response) {
+        console.log("Downloading " + url);
+
         response.on('data', function(data) {
             process.stdout.write("#");
-        })
-        .pipe(file)
+        }).pipe(file);
+
         file.on('finish', function() {
-            console.log("Done")
+            console.log("Done");
             file.close(cb);  // close() is async, call cb after close completes.
         });
     }).on('error', function(err) { // Handle errors
         fs.unlink(dest, function(err){}); // Delete the file async. (But we don't check the result)
-        if (cb) cb(err.message);
+
+        if(cb)
+            cb(err.message);
     });
 };
 
