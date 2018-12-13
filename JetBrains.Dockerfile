@@ -1,5 +1,5 @@
 # Created by WebStorm
-FROM node:10-stretch
+FROM socc_pisignage:1.0
 WORKDIR /tmp/project_modules
 COPY package.json /tmp/project_modules/package.json
 RUN npm install .
