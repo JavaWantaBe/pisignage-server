@@ -112,7 +112,6 @@ angular.module('piServerApp', [
                 }
             })
 
-
             .state("home.assets.assetDetails", {
                 url: "detail/:file",
                 views: {
@@ -163,8 +162,7 @@ angular.module('piServerApp', [
                         controller: 'SettingsCtrl'
                     }
                 }
-                
-            })
+            });
 
         $httpProvider.interceptors.push(function ($q, $rootScope) {
 
@@ -236,7 +234,7 @@ angular.module('piServerApp', [
                 } else {
                     $rootScope.serverConfig = {installation:"local"};
                 }
-                if (data.data.installation == "local") {
+                if (data.data.installation === "local") {
                     $modal.open({
                         template: [
                             '<div class="modal-header">',
@@ -260,15 +258,15 @@ angular.module('piServerApp', [
                                     .error(function(data, status) {
                                     });
                                 $modalInstance.close();
-                            }
+                            };
                         }]
-                    })
+                    });
                 }
 
             }).error(function(err){
                 console.log(err);
                 $rootScope.serverConfig = {installation:"local"};
-            })
+            });
 
         castApi.init();
     });

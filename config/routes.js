@@ -18,13 +18,15 @@ const assets = require('../app/controllers/assets'),
 /**
  * Application routes
  */
-
 //Server Routes
 // if(config.gCalendar.CLIENT_ID && config.gCalendar.CLIENT_SECRET){
 //     router.get('/auth/gcal/callback', gcalAuthorize.gCalCallback)     // from Google
 //     router.post('/api/gcal/authorize', gcalAuthorize.gCalAuthorize)   //from client
 //}
 
+/**
+ * Assets
+ */
 router.get('/api/files', assets.index);
 router.get('/api/files/:file', assets.getFileDetails);
 router.post('/api/files', upload.fields([{name:'assets',maxCount: 10}]), assets.createFiles);
@@ -33,19 +35,30 @@ router.post('/api/playlistfiles', assets.updatePlaylist);
 router.post('/api/files/:file', assets.updateAsset);
 router.delete('/api/files/:file', assets.deleteFile);
 
-// router.get('/api/calendars/:file', assets.getCalendar);
-// router.post('/api/calendars/:file', assets.updateCalendar);
+/**
+ * Calendar
+ */
+router.get('/api/calendars/:file', assets.getCalendar);
+router.post('/api/calendars/:file', assets.updateCalendar);
 router.delete('/api/calendars/:file', assets.deleteFile);
 
+/**
+ * Links
+ */
 router.post('/api/links', assets.createLinkFile);
 router.get('/api/links/:file', assets.getLinkFileDetails);
 
+/**
+ * Playlists
+ */
 router.get('/api/playlists', playlists.index);
 router.get('/api/playlists/:file', playlists.getPlaylist);
 router.post('/api/playlists', playlists.createPlaylist);
 router.post('/api/playlists/:file', playlists.savePlaylist);
 
-// group routes
+/**
+ * Groups
+ */
 router.get('/api/groups', groups.index);
 router.get('/api/groups/:groupid', groups.getObject);
 router.post('/api/groups', groups.createObject);
@@ -54,6 +67,9 @@ router.delete('/api/groups/:groupid', groups.deleteObject);
 
 router.param('groupid', groups.loadObject);
 
+/**
+ * Players
+ */
 router.get('/api/players', players.index);
 router.get('/api/players/:playerid', players.getObject);
 router.post('/api/players', players.createObject);
@@ -67,6 +83,9 @@ router.post('/api/pitv/:playerid',players.tvPower);
 
 router.param('playerid', players.loadObject);
 
+/**
+ * Labels
+ */
 router.get('/api/labels', labels.index);
 router.get('/api/labels/:label', labels.getObject);
 router.post('/api/labels', labels.createObject);
@@ -78,9 +97,15 @@ require('../app/controllers/licenses').getSettingsModel(function(err,settings){
     router.post('/api/licensefiles',uploadLicense.fields([{name:'assets',maxCount: 10}]),licenses.saveLicense);
 });
 
+/**
+ * Licenses
+ */
 router.get('/api/licensefiles',licenses.index);
 router.delete('/api/licensefiles/:filename',licenses.deleteLicense);
 
+/**
+ * Settings
+ */
 router.get('/api/settings',licenses.getSettings);
 router.post('/api/settings',licenses.updateSettings);
 

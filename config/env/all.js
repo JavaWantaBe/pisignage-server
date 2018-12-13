@@ -1,11 +1,11 @@
 'use strict';
 
 //installation and authCredentials has been moved to db, configure at settings tab
-var path = require('path');
+const path = require('path');
 
-var rootPath = process.cwd(),
-    dataDir = path.join(rootPath, '/data'),
-    assetDir = path.join(rootPath, '/media');
+const rootPath = process.cwd(),
+      dataDir = path.join(rootPath, '/data'),
+      assetDir = path.join(rootPath, '/media');
 
 module.exports = {
     root: rootPath,
@@ -36,8 +36,9 @@ module.exports = {
             }
         }
     },
+
     session: {
-        secret: 'piSignage'
+        secret: 'PiSignage'
     },
 
     filenameRegex: /[&\/\\#,+()$~%'":*?<>{}]/g,

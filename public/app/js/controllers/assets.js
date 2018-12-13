@@ -1,4 +1,4 @@
-'use strict'
+'use strict';
 
 angular.module('piAssets.controllers',[])
     .controller('AssetsCtrl',function($scope,piUrls,$http, assetLoader) {
@@ -7,7 +7,7 @@ angular.module('piAssets.controllers',[])
         $scope.playlist = assetLoader.playlist;
 
         //drag and drop, sort for playlist files, needs claenup
-        $scope.sortable = {}
+        $scope.sortable = {};
         $scope.sortable.options = {
             accept: function (sourceItemHandleScope, destSortableScope, destItemScope) {
                 var srcScope = sourceItemHandleScope.itemScope.sortableScope.$parent,
@@ -17,14 +17,14 @@ angular.module('piAssets.controllers',[])
                 //console.log("dst: "+dstScope.sortListName)
 
                 //atleast one list has to be playlist Assets
-                if (srcScope.sortListName != "playlistAssets" && dstScope.sortListName != "playlistAssets" )
+                if (srcScope.sortListName !== "playlistAssets" && dstScope.sortListName !== "playlistAssets" )
                     return false;
-                if (srcScope == dstScope)
+                if (srcScope === dstScope)
                     return true;
-                if (dstScope.sortListName == "playlistAssets" && dstScope.playlist.selectedPlaylist != null) {
+                if (dstScope.sortListName === "playlistAssets" && dstScope.playlist.selectedPlaylist != null) {
                     var assets = dstScope.playlist.selectedPlaylist.assets;
                     for (var i= 0,len=assets.length;i<len;i++) {
-                        if (assets[i].filename == sourceItemHandleScope.modelValue.fileDetails.name)
+                        if (assets[i].filename === sourceItemHandleScope.modelValue.fileDetails.name)
                             return false;
                     }
                 }
@@ -38,13 +38,13 @@ angular.module('piAssets.controllers',[])
                 var srcIndex = event.source.index,
                     destIndex = event.dest.index;
 
-                if (dstScope.sortListName == "playlistAssets" ) {  //copy to source
+                if (dstScope.sortListName === "playlistAssets" ) {  //copy to source
                     srcScope.asset.allAssets.assets.splice(srcIndex,0,dstScope.asset.showAssets.assets[destIndex])
                 } else {
                     dstScope.asset.allAssets.assets.splice(destIndex, 1);   //already present do not duplicate
                 }
                 var playlist;
-                if (srcScope.sortListName == "playlistAssets" ) {
+                if (srcScope.sortListName === "playlistAssets" ) {
                     playlist = srcScope.playlist.selectedPlaylist;
                     playlist.assets.splice(srcIndex,1);
                 } else {
@@ -87,13 +87,13 @@ angular.module('piAssets.controllers',[])
 
     controller('AssetsEditCtrl', function($scope,$rootScope,$state, $http,$modal, fileUploader, assetLoader,piUrls,piPopup){
 
-        $scope.sortListName = "assets"
-        $scope.label = assetLoader.label
+        $scope.sortListName = "assets";
+        $scope.label = assetLoader.label;
 
         $scope.assetConfig = {
             allAssets: false,
             assets: []
-        }
+        };
 
         var assignAssets = function() {
             if ($state.current.data && $state.current.data.showAllAssets) {
@@ -103,7 +103,7 @@ angular.module('piAssets.controllers',[])
                 $scope.assetConfig.allAssets = false,
                 $scope.assetConfig.assets = $scope.asset.showAssets
             }
-        }
+        };
         assetLoader.registerObserverCallback(assignAssets,"assets");
         assignAssets();
 
@@ -113,8 +113,8 @@ angular.module('piAssets.controllers',[])
             return (assetLoader.label.selectedLabel?
                     (asset.fileDetails.labels && asset.fileDetails.labels.indexOf(assetLoader.label.selectedLabel) >= 0):
                     true
-            )
-        }
+            );
+        };
 
         $scope.fn = {};
             $scope.fn.editMode = false;
@@ -124,7 +124,7 @@ angular.module('piAssets.controllers',[])
                     $scope.names = [];
                     $scope.asset.files.forEach(function (file) {
                         var name, ext;
-                        if (file.lastIndexOf('.') == -1) {
+                        if (file.lastIndexOf('.') === -1) {
                             name = file;
                             ext = ""
                         } else {
@@ -134,13 +134,13 @@ angular.module('piAssets.controllers',[])
                         $scope.names.push({
                             name: name,
                             ext: ext
-                        })
+                        });
                     });
                 } else {
                     assetLoader.reload();
                     $state.reload();
                 }
-            }
+            };
 
             $scope.fn.delete= function(index){
                 piPopup.confirm("File "+$scope.asset.files[index], function() {
@@ -155,8 +155,8 @@ angular.module('piAssets.controllers',[])
                         })
                         .error(function(data, status) {
                         });
-                })
-            }
+                });
+            };
 
             $scope.fn.rename= function(index){
                 var oldname = $scope.asset.files[index],
@@ -178,11 +178,11 @@ angular.module('piAssets.controllers',[])
                         .error(function (data, status) {
                         });
                 }
-            }
+            };
 
             $scope.fn.showDetails = function(file) {
                 $state.go("home.assets.assetDetails",{file:file})
-            }
+            };
 
         //upload assets related
         $scope.msg = {
@@ -190,8 +190,9 @@ angular.module('piAssets.controllers',[])
             msg: 'Please Wait',
             buttonText: 'Uploading',
             disable: true
-        }
-        $scope.newLabel = {}
+        };
+
+        $scope.newLabel = {};
         $scope.upload = {
             onstart: function (files) {
                 $scope.modal = $modal.open({
@@ -208,7 +209,7 @@ angular.module('piAssets.controllers',[])
                 $scope.uploadedFiles = files;
                 if (data.data) {
                     data.data.forEach(function (item) {
-                        if ($scope.asset.files.indexOf(item.name) == -1)
+                        if ($scope.asset.files.indexOf(item.name) === -1)
                             $scope.asset.files.push(item.name);
                     });
                 }
@@ -229,7 +230,7 @@ angular.module('piAssets.controllers',[])
             onerror: function(files, type, msg) {
                 if (!$scope.modal)
                     $scope.upload.onstart();
-                $scope.msg.msg = 'Upload Error,'+type+': '+ msg;;
+                $scope.msg.msg = 'Upload Error,'+type+': '+ msg;
                 $scope.msg.buttonText = 'OK';
                 $scope.msg.disable = false;
             },
@@ -244,8 +245,8 @@ angular.module('piAssets.controllers',[])
                     .post(piUrls.labels, $scope.newLabel)
                     .success(function(data, status) {
                         if (data.success) {
-                            $scope.upload.selectedLabels.push(data.data.name)
-                            $scope.upload.labels.push(data.data)
+                            $scope.upload.selectedLabels.push(data.data.name);
+                            $scope.upload.labels.push(data.data);
                             $scope.newLabel = {};
                             $scope.msg.error = null;
                         } else {
@@ -257,7 +258,7 @@ angular.module('piAssets.controllers',[])
             },
 
             modalOk: function () {
-                if ($scope.msg.buttonText == "OK") {
+                if ($scope.msg.buttonText === "OK") {
                     $scope.modal.close();
                     //$state.reload();
                     assetLoader.reload();
@@ -267,8 +268,8 @@ angular.module('piAssets.controllers',[])
                 $scope.msg.title = 'Processing in Progress...';
                 $scope.msg.msg = 'Please Wait';
                 var fileArray = $scope.uploadedFiles.map(function(file){
-                    return ({name:file.name,size:file.size,type:file.type})
-                })
+                    return ({name:file.name,size:file.size,type:file.type});
+                });
                 $http
                     .post(piUrls.filespostupload, {files: fileArray, categories: $scope.upload.selectedLabels})
                     .success(function (data, status) {
@@ -286,9 +287,9 @@ angular.module('piAssets.controllers',[])
                         $scope.msg.msg = 'HTTP Post Error';
                         $scope.msg.buttonText = 'OK';
                         $scope.msg.disable = false;
-                    })
+                    });
             }
-        }
+        };
 
         //Add link releated for uploading links
         $scope.link = {
@@ -312,10 +313,10 @@ angular.module('piAssets.controllers',[])
             showPopup: function (type) {
                 if (type) {
                     $scope.link.obj.type = _.find($scope.link.types, function (obj) {
-                        return obj.ext.slice(1) == type
+                        return obj.ext.slice(1) === type;
                     }).ext;
                 } else {
-                    $scope.link.obj.type = ".tv"
+                    $scope.link.obj.type = ".tv";
                 }
                 $scope.linkCategories = []
                 $scope.modal = $modal.open({
@@ -336,9 +337,9 @@ angular.module('piAssets.controllers',[])
                     })
                     .error(function (data, status) {
                         $scope.errorMessage = data.stat_message;
-                    })
+                    });
             }
-        }
+        };
 
         // $scope.configureGCalendar= function() {
         //     $scope.gCalModal = $modal.open({
@@ -364,7 +365,7 @@ angular.module('piAssets.controllers',[])
                             for (var i=0,len=$scope.ngDropdown.selectedAssets.length;i<len;i++) {
                                 var asset = $scope.ngDropdown.selectedAssets[i];
                                 asset.fileDetails.labels = asset.fileDetails.labels || [];
-                                if (asset.fileDetails.labels.indexOf(label.name) == -1)
+                                if (asset.fileDetails.labels.indexOf(label.name) === -1)
                                     asset.fileDetails.labels.push(label.name);
                                 //delete asset.selected;
 
@@ -387,7 +388,7 @@ angular.module('piAssets.controllers',[])
                             for (var i = 0, len = $scope.ngDropdown.selectedAssets.length; i < len; i++) {
                                 var asset = $scope.ngDropdown.selectedAssets[i],
                                     index = asset.fileDetails.labels.indexOf(label.name);
-                                if (index != -1)
+                                if (index !== -1)
                                     asset.fileDetails.labels.splice(index, 1);
                                 //delete asset.selected;
 
@@ -396,7 +397,7 @@ angular.module('piAssets.controllers',[])
                                         if (data.success) {
                                             asset.fileDetails = data.data;
                                             $scope.asset.filesDetails[data.data.name] = data.data;
-                                            assetLoader.updateLabelsCount()
+                                            assetLoader.updateLabelsCount();
                                         }
                                     })
                                     .error(function (data, status) {
@@ -410,7 +411,7 @@ angular.module('piAssets.controllers',[])
                 extraSettings: {displayProp:'name', idProp:'name', externalIdProp:'name',
                     closeOnSelect: true,
                     showCheckAll:false,showUncheckAll:false  },
-                customTexts: {buttonDefaultText:($state.current.name.indexOf("home.assets.playlists") == 0)?"AssignTo Playlist":"RemoveFrom Playlist"},
+                customTexts: {buttonDefaultText:($state.current.name.indexOf("home.assets.playlists") === 0)?"AssignTo Playlist":"RemoveFrom Playlist"},
                 PlaylistTab: assetLoader.playlist,
                 selectedPlaylists: [],
                 events: {
@@ -422,7 +423,7 @@ angular.module('piAssets.controllers',[])
                                 return asset.filename;
                             });
                             $scope.ngDropdown.selectedAssets.forEach(function (asset) {
-                                if (assetNames.indexOf(asset.playlistDetails.filename) == -1) {
+                                if (assetNames.indexOf(asset.playlistDetails.filename) === -1) {
                                     playlist.assets.push(asset.playlistDetails);
                                     $scope.asset.groupWiseAssets[$scope.playlist.selectedPlaylist.name].assets.push(asset);
                                 }
@@ -452,29 +453,29 @@ angular.module('piAssets.controllers',[])
             clearCheckboxes: function() {
                 $scope.ngDropdown.selectedAssets.forEach(function(asset){
                     asset.selected = false;
-                })
+                });
                 $scope.ngDropdown.selectedAssets=[];
                 $scope.ngDropdown.label.selectedLabels = [];
                 $scope.ngDropdown.playlist.selectedPlaylists = [];
             }
-        }
+        };
 
         $scope.scheduleValidity = function(asset) {
             $scope.forAsset = asset;
             var validityField = asset.fileDetails.validity || {enable: false};
             if (validityField.startdate)
                 validityField.startdate =
-                    new Date(validityField.startdate)
+                    new Date(validityField.startdate);
             if (validityField.enddate)
                 validityField.enddate =
-                    new Date(validityField.enddate)
+                    new Date(validityField.enddate);
 
             $scope.scheduleValidityModal = $modal.open({
                 templateUrl: '/app/templates/schedule-validity.html',
                 scope: $scope,
                 keyboard: false
             });
-        }
+        };
 
         $scope.saveValidity = function() {
             $http.post(piUrls.files + $scope.forAsset.fileDetails.name, {dbdata: $scope.forAsset.fileDetails})
@@ -485,7 +486,7 @@ angular.module('piAssets.controllers',[])
                     }
                 },function(response) {
                 });
-        }
+        };
 
 
 
@@ -495,12 +496,12 @@ angular.module('piAssets.controllers',[])
                 templateUrl: '/app/partials/labels.html',
                 controller: 'LabelsCtrl',
                 scope: $scope
-            })
-        }
+            });
+        };
 
         $scope.$on("$destroy", function() {
             $scope.ngDropdown.clearCheckboxes();
-        })
+        });
     })
 
     .controller('AssetViewCtrl', function($scope, $rootScope,$window, $http, piUrls, $state, piPopup,assetLoader){

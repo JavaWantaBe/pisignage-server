@@ -13,8 +13,6 @@ const favicon = require('serve-favicon'),             //express middleware
       bodyParser = require('body-parser'),
       cookieParser = require('cookie-parser');
 
-
-
 //CORS middleware  , add more controls for security like site names, timeout etc.
 let allowCrossDomain = function (req, res, next) {
     res.header('Access-Control-Allow-Origin', req.headers.origin);
@@ -55,7 +53,7 @@ let basicHttpAuth = function(req,res,next) {
 
         logger.info(pathComponents);
 
-        require('../app/controllers/licenses').getSettingsModel(function(err,settings){
+        require('../app/controllers/licenses').getSettingsModel((err,settings) => {
             if( (!settings.authCredentials) ||
                 (!settings.authCredentials.user || username === settings.authCredentials.user) &&
                 (!settings.authCredentials.password || password === settings.authCredentials.password)) {
@@ -90,16 +88,18 @@ module.exports = function (app) {
         app.locals.compileDebug = true;
     }
 
-    if (process.env.NODE_ENV === 'production') {
-        app.use(favicon(path.join(config.root, 'public/app/img', 'favicon.ico')));
-    }
+    app.use(favicon(path.join(config.root, 'public/app/img', 'favicon.ico')));
+
+    // if (process.env.NODE_ENV === 'production') {
+    //     app.use(favicon(path.join(config.root, 'public/app/img', 'favicon.ico')));
+    // }
 
     //app.use(auth.connect(digest));      //can specify specific routes for auth also
     app.use(basicHttpAuth);
 
     //app.use('/sync_folders',serveIndex(config.syncDir));
-    app.use('/sync_folders',function(req, res, next){
-            fs.stat(path.join(config.syncDir,req.path), function(err, stat){
+    app.use('/sync_folders', (req, res, next) =>{
+            fs.stat(path.join(config.syncDir,req.path), (err, stat) => {
                 if (!err && stat.isDirectory()) {
                     res.setHeader('Last-Modified', (new Date()).toUTCString());
                 }
@@ -108,14 +108,15 @@ module.exports = function (app) {
         },
         serveIndex(config.syncDir)
     );
-    app.use('/sync_folders',express.static(config.syncDir));
-    app.use('/releases',express.static(config.releasesDir));
-    app.use('/licenses',express.static(config.licenseDir));
+
+    app.use('/sync_folders', express.static(config.syncDir));
+    app.use('/releases', express.static(config.releasesDir));
+    app.use('/licenses', express.static(config.licenseDir));
 
     app.use('/media', express.static(path.join(config.mediaDir)));
     app.use(express.static(path.join(config.root, 'public')));
 
-    app.set('view engine', 'jade');
+    app.set('view engine', 'pug');
     app.locals.basedir = config.viewDir; //for jade root
 
     app.set('views', config.viewDir);
@@ -124,13 +125,11 @@ module.exports = function (app) {
     app.use(bodyParser.json());
     app.use(bodyParser.urlencoded({ extended: true }));
     app.use(methodOverride());
-
     app.use(cookieParser());
-
     app.use(require('./routes'));
 
     // custom error handler
-    app.use(function (err, req, res, next) {
+    app.use((err, req, res, next) => {
         if (err.message.indexOf('not found') >= 0)
             return next();
         //ignore range error as well
@@ -140,8 +139,8 @@ module.exports = function (app) {
         res.status(500).render('500');
     });
 
-    app.use(function (req, res, next) {
+    app.use((req, res, next) => {
         //res.redirect('/');
-        res.status(404).render('404', {url: req.originalUrl})
+        res.status(404).render('404', {url: req.originalUrl});
     });
 };

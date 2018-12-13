@@ -7,19 +7,22 @@ html(lang='en')
         meta(name='description', content='Server to manage piSignage players in a LAN or Private Network')
         meta(name='author', content='colloqi')
         meta(name='copyright', content=', Copyright (c) 2015')
-        link(rel='icon', href='app/img/pisignage-logo.png')
-        title pisignage-server
+        link(rel='icon', href='app/img/Southwestern Logo-rgb.png')
+        title PiSignage Server
 
         // Bootstrap core CSS
-        link(rel='stylesheet', href='app/css/bootstrap.min.css')
+        link(rel='stylesheet', href='app/lib/bootstrap/css/bootstrap.min.css')
+        link(rel='stylesheet', href='app/lib/font-awesome/css/all.min.css')
         link(rel='stylesheet', href='app/css/lato.min.css')
-        link(rel='stylesheet', href='app/css/font-awesome.min.css')
         link(rel='stylesheet', href='app/css/ng-sortable.min.css')
         link(rel='stylesheet', href='app/css/ng-sortable.style.min.css')
         link(rel='stylesheet', href='app/css/custom.css')
 
-        script(src='https://www.gstatic.com/cv/js/sender/v1/cast_sender.js')
-
+        // Javascript Libraries
+        script(src='app/lib/jquery/jquery-3.3.1.js')
+        script(src='app/lib/popper/popper.min.js')
+        script(src='app/lib/bootstrap/js/bootstrap.js')
+        script(src='app/lib/cast_sender/cast_sender.js')
         script(src='app/lib/angular/angular.min.js')
         script(src='app/lib/angular-ui-router/angular-ui-router.min.js')
         script(src='app/lib/angular-bootstrap/ui-bootstrap-tpls.min.js')
@@ -29,6 +32,7 @@ html(lang='en')
         script(src='app/lib/utils/async.min.js')
         script(src="app/lib/utils/angular-timeago.min.js")
 
+        // Custom Javascript
         script(src='app/js/pi-config.js')
         script(src='app/js/controllers/pi-index.js')
         script(src='app/js/controllers/groups.js')
@@ -45,4 +49,4 @@ html(lang='en')
         script(src='app/js/app-pc.js')
 
     body#serverapp(ng-app="piServerApp")
-        div.height100(ui-view="",autoscroll="false") Please wait while the app loads
+        div.height100(ui-view="", autoscroll="false") Please wait while the app loads

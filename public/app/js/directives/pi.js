@@ -28,7 +28,7 @@ directive('butterbar', ['$rootScope', function($rootScope) {
             $rootScope.$on('$stateChangeSuccess', function() {
                 element.addClass('hide');
             }); }
-    }
+    };
 }]).
 
 directive('focus', function() {
@@ -36,7 +36,7 @@ directive('focus', function() {
         link: function(scope, element, attrs) {
             element[0].focus();
         }
-    }
+    };
 }).
 
 directive('ngEnter', function() {
@@ -95,7 +95,7 @@ directive('nodeimsFileUpload', ['fileUploader','piUrls', function(fileUploader, 
                         '<input type="file" multiple="" style="position:absolute;top:0;left:0;opacity: 0;width:100%;height:50px;z-index: 100"/>'+
                         '<span ng-transclude></span>'+
                     '</label>'
-            )
+            );
         },
         compile: function compile(tElement, tAttrs, transclude) {            
             if (!tAttrs.maxFiles) {
@@ -111,16 +111,31 @@ directive('nodeimsFileUpload', ['fileUploader','piUrls', function(fileUploader, 
                 scope.files = [];
                 scope.showUploadButton = false;
                 scope.percent = 0;
-                scope.progressText = "";        
+                scope.progressText = "";
+
+                function resetFileInput() {
+
+                }
+
+                function raiseError(files, type, msg) {
+                    scope.$apply(function() {
+                        scope.onerror({files: files, type: type, msg: msg});
+                    });
+                    resetFileInput();
+                }
+
                 el.bind('change', function(e) {
+
                     //warning - this is a FileList not an array!
                     console.log('file change event');
+
                     if (!e.target.files.length) return;
                     
                     scope.files = [];
                     scope.maxFiles = scope.maxFiles || 10;
                     scope.maxFileSizeMb = scope.maxFileSizeMb || 3000;
-                    var tooBig = [];
+                    let tooBig = [];
+
                     if (e.target.files.length > scope.maxFiles) {
                         raiseError(e.target.files, 'TOO_MANY_FILES', "Cannot upload " + e.target.files.length + " files, maxium allowed is " + scope.maxFiles);
                         return;
@@ -140,9 +155,9 @@ directive('nodeimsFileUpload', ['fileUploader','piUrls', function(fileUploader, 
                         return;
                     }
                     scope.autoUpload = 'true'; //forcing as of now
-                    if (scope.autoUpload && scope.autoUpload.toLowerCase() == 'true') {                        
-                        if(attrs.allow == 'imageonly') {
-                            if (! (scope.files[0].type.indexOf('image') == -1) ) {
+                    if (scope.autoUpload && scope.autoUpload.toLowerCase() === 'true') {
+                        if(attrs.allow === 'imageonly') {
+                            if (!(scope.files[0].type.indexOf('image') === -1) ) {
                                 scope.upload();
                             }
                             else {
@@ -155,14 +170,14 @@ directive('nodeimsFileUpload', ['fileUploader','piUrls', function(fileUploader, 
                     } else {
                         scope.$apply(function() {
                             scope.showUploadButton = true;
-                        })
+                        });
                     }
                 });
                 
                 scope.upload = function() {
                     scope.onstart();
         
-                    var data = null,
+                    let data = null,
                         uploadPath = piUrls.files;
                     if (scope.getAdditionalData) {
                         data = scope.getAdditionalData();
@@ -171,9 +186,9 @@ directive('nodeimsFileUpload', ['fileUploader','piUrls', function(fileUploader, 
                         uploadPath = piUrls.base+scope.postPath;
                     }
                     //make a copy of file in obj
-                    var objFiles = [],
+                    let objFiles = [],
                         obj;
-                    for (var i = 0; i < scope.files.length; i++) {
+                    for (let i = 0; i < scope.files.length; i++) {
                         //copy File properties to an object
                         obj = {};
                         obj.name = scope.files[i].name;
@@ -200,20 +215,9 @@ directive('nodeimsFileUpload', ['fileUploader','piUrls', function(fileUploader, 
         
                     resetFileInput();
                 };
-        
-                function raiseError(files, type, msg) {
-                    scope.$apply(function() {
-                        scope.onerror({files: files, type: type, msg: msg});
-                    });
-                    resetFileInput();
-                }
-        
-                function resetFileInput() {
-        
-                }
-            }
+            };
         }
-    }
+    };
 }]).
 
 directive('categories',['$http','piUrls', function($http,piUrls,truncate) {
@@ -232,7 +236,7 @@ directive('categories',['$http','piUrls', function($http,piUrls,truncate) {
                                 '<small class="text-muted" ng-attr-title="{{category.name}}">{{category.name | truncate:18}}</small>' +
                     '</label></div></div></form>',
         link: function(scope, elem, attr){
-            scope.cat = {}   //holds all the category related objects
+            scope.cat = {};   //holds all the category related objects
             $http.get(piUrls.labels,{})
                 .success(function(data, status) {
                     if (data.success) {
@@ -292,7 +296,7 @@ directive('unsavedChangesWarning', ['saveChangesPrompt', '$parse', function(save
                 //
                 // @todo can we use this above, in our service?
                 //
-                var fn = $parse(attrs.rcSubmit);
+                let fn = $parse(attrs.rcSubmit);
 
 
                 // intercept the form submit functionality
@@ -329,10 +333,10 @@ directive('unsavedChangesWarning', ['saveChangesPrompt', '$parse', function(save
     return {
         link: function(scope, element, attrs) {
             element.bind('error', function() {
-                if (attrs.src != attrs.errSrc) {
+                if (attrs.src !== attrs.errSrc) {
                     attrs.$set('src', attrs.errSrc);
                 }
             });
         }
-    }
-})
+    };
+});

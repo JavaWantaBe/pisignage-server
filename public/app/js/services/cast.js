@@ -42,30 +42,30 @@ angular.module('pisignage.services')
 
             }).error(function (err) {
             console.log(err);
-        })
+        });
 
         function changeState() {
-            $rootScope.$apply()
+            $rootScope.$apply();
         }
 
         function stopped(session) {
             var present = false;
             sessions[session.statusText] = null;
             for (var key in sessions) {
-                if (sessions[key] != null) {
+                if (sessions[key] !== null) {
                     present = true;
                     break;
                 }
             }
             if (!present) {
                 castStatus.deviceState = DEVICE_STATE.IDLE;
-                changeState()
+                changeState();
             }
         }
 
         function updateListener (session) {
-            if (session.status == "stopped") {
-                stopped(session)
+            if (session.status === "stopped") {
+                stopped(session);
             }
             sendServerIp(session);
         }
@@ -86,24 +86,24 @@ angular.module('pisignage.services')
                     sessions[e.statusText].addUpdateListener(function(isAlive){
                         updateListener(sessions[e.statusText])
                     });
-                    changeState()
+                    changeState();
                 },
                 function(e) {
-                    if (e.code != "cancel") {
+                    if (e.code !== "cancel") {
                         console.log("launch error");
                         castStatus.deviceState = DEVICE_STATE.ERROR;
-                        changeState()
+                        changeState();
                     }
                 }
             );
-        };
+        }
 
         /**
          * Stops the running receiver application associated with the session.
          */
         function stopApp () {
             //let chrome cast extension handle stopping the cast
-            launchApp ()
+            launchApp ();
 /*            session.stop(
                 function() {
                     console.log("Session stopped");
@@ -115,7 +115,7 @@ angular.module('pisignage.services')
                     console.log('cast initialize error',e);
                 }
             )*/
-        };
+        }
 
         function sendServerIp (session) {
             if (!session)
@@ -130,37 +130,38 @@ angular.module('pisignage.services')
                     chromecastName: session.receiver.friendlyName
                 },
                 function(){
-                    console.log("Server IP message has been sent")
+                    console.log("Server IP message has been sent");
                 }, function(err){
-                    console.log("Server IP message sending error: "+err)
+                    console.log("Server IP message sending error: " + err);
                 }
-            )
+            );
         }
 
         function sessionListener(e){
             sessions[e.statusText] = e;
-            console.log("Session listener callback")
+            console.log("Session listener callback");
+
             if( sessions[e.statusText] ) {
                 castStatus.deviceState = DEVICE_STATE.ACTIVE;
                 sessions[e.statusText].addUpdateListener(function(isAlive){
-                    updateListener(sessions[e.statusText])
+                    updateListener(sessions[e.statusText]);
                 });
                 sessions[e.statusText].addMessageListener('urn:x-cast:com.pisignage.instasign', function(s1,s2){
-                    console.log("message received")
-                })
-                changeState()
+                    console.log("message received");
+                });
+                changeState();
             }
         }
 
         function receiverListener(devicePresent){
             if( devicePresent === chrome.cast.ReceiverAvailability.AVAILABLE) {
                 castStatus.devicesAvailable = true;
-                console.log("devices present")
+                console.log("devices present");
             } else {
                 castStatus.devicesAvailable = false;
                 console.log("receiver list empty");
             }
-            changeState()
+            changeState();
         }
 
         function castInit(){
@@ -168,9 +169,10 @@ angular.module('pisignage.services')
                 return;
 
             if (!chrome.cast || !chrome.cast.isAvailable) {
-                $timeout(castInit,1000)
+                $timeout(castInit,1000);
                 return;
             }
+
             var applicationID = '90DC4B3D';
             // auto join policy can be one of the following three
             var autoJoinPolicy = chrome.cast.AutoJoinPolicy.ORIGIN_SCOPED;
@@ -183,7 +185,7 @@ angular.module('pisignage.services')
 
             chrome.cast.initialize(apiConfig,
                 function(){
-                    console.log('cast init success')
+                    console.log('cast init success');
                 }, function(e){
                     console.log('cast initialize error',e);
                 }
@@ -196,5 +198,5 @@ angular.module('pisignage.services')
             launchApp: launchApp,
             stopApp: stopApp,
             castStatus: castStatus
-        }
-    })
+        };
+    });

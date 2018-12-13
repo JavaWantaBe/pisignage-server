@@ -14,33 +14,32 @@ angular.module('piLabels.controllers', [])
         // }
 
         $scope.modeFilter = function(label) {
-            if ($scope.labelMode == "players")
+            if ($scope.labelMode === "players")
                 return (label.mode && label.mode === "players")
             else
                 return (!label.mode || label.mode !== "players")
-        }
-
+        };
 
         $scope.fn = {};
         $scope.fn.editMode = false;
         $scope.fn.edit = function () {
             $scope.fn.editMode = !$scope.fn.editMode;
             assetLoader.selectLabel();
-        }
+        };
 
-        $scope.newLabel = {}
+        $scope.newLabel = {};
         $scope.fn.add = function(){
             if (!$scope.newLabel.name) {
                 return;
             }
 
             for (var i=0; i <$scope.label.labels.length; i++) {
-                if ($scope.label.labels[i].name == $scope.newLabel.name) {
+                if ($scope.label.labels[i].name === $scope.newLabel.name) {
                     $scope.newLabel.name = "Label exists";
                     return;
                 }
             }
-            if ($scope.labelMode == "players")
+            if ($scope.labelMode === "players")
                 $scope.newLabel.mode = $scope.labelMode;
 
 
@@ -54,7 +53,7 @@ angular.module('piLabels.controllers', [])
                 })
                 .error(function(data, status) {
                 });
-        }
+        };
 
         $scope.fn.delete= function(label){
             if($scope.fn.editMode){
@@ -69,30 +68,30 @@ angular.module('piLabels.controllers', [])
                         })
                         .error(function (data, status) {
                         });
-                })
+                });
             } else {
-                $scope.fn.selected(label.name)
-                if ($scope.labelModal) $scope.labelModal.close()
+                $scope.fn.selected(label.name);
+                if ($scope.labelModal) $scope.labelModal.close();
             }
-        }
+        };
         
         $scope.fn.getClass = function(label) {
-            if ($scope.label.selectedLabel == label || $scope.label.selectedPlayerLabel == label) {
-                return "bg-info"
+            if ($scope.label.selectedLabel === label || $scope.label.selectedPlayerLabel === label) {
+                return "bg-info";
             } else {
-                return ""
+                return "";
             }
-        }
+        };
         
         $scope.fn.selected= function(label){
             if(!$scope.fn.editMode) {
-                if ($scope.labelMode == "players")
-                    assetLoader.selectPlayerLabel(($scope.label.selectedPlayerLabel == label) ? null : label);
+                if ($scope.labelMode === "players")
+                    assetLoader.selectPlayerLabel(($scope.label.selectedPlayerLabel === label) ? null : label);
                 else
-                    assetLoader.selectLabel(($scope.label.selectedLabel == label) ? null : label);
+                    assetLoader.selectLabel(($scope.label.selectedLabel === label) ? null : label);
             }
             if ($scope.labelModal) $scope.labelModal.close()
-        }
+        };
 
-})
+});
         

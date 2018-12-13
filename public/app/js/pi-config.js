@@ -1,3 +1,5 @@
+'use strict';
+
 angular.module('piConfig', [])
     .constant('piUrls', (function() {
         var base,protocol;
@@ -8,7 +10,7 @@ angular.module('piConfig', [])
                 (window.location.port ? ':' + window.location.port: '');
         }
         protocol = window.location.protocol.toLowerCase();
-        if (protocol.indexOf("http") != -1 )
+        if (protocol.indexOf("http") !== -1 )
             base = window.location.origin+'/';
         else
             base = 'http://localhost/';
@@ -35,8 +37,7 @@ angular.module('piConfig', [])
             snapshot:        base + 'api/snapshot/',
             pitv:            base + 'api/pitv/',
             swupdate:        base + 'api/swupdate/'
-
-        }
+        };
     })())
 
     .constant('piConstants', (function() {
@@ -57,7 +58,7 @@ angular.module('piConfig', [])
             pdffileRegex:           /\.pdf$/i,
             txtFileRegex:           /\.txt$/i,
             radioFileRegex:         /\.radio$/i
-        }
+        };
     })())
 
     .constant('layoutOtherZones', (function() {
@@ -82,7 +83,7 @@ angular.module('piConfig', [])
             'custom'    : ["side","bottom","zone4","zone5","zone6"],
             'customp'   : ["side","bottom","zone4","zone5","zone6"],
             'customp270': ["side","bottom","zone4","zone5","zone6"]
-        }
+        };
     })())
 
     .constant('weeks',(function(){ // all weeks for playlist time setting
@@ -91,7 +92,7 @@ angular.module('piConfig', [])
             'Monday',    'Tuesday',
             'Wednesday', 'Thursday',
             'Friday',    'Saturday'
-        ]
+        ];
     })())
 
     .constant('days',(function(){ // all days in month for playlist time setting
@@ -108,8 +109,7 @@ angular.module('piConfig', [])
             '25', '26', '27',
             '28', '29', '30',
             '31'
-        ]
-
+        ];
     })())
 
     .constant('weeksObject',(function(){ // all weeks for playlist time setting
@@ -122,7 +122,7 @@ angular.module('piConfig', [])
             {id: 5,label: 'Thursday'},
             {id: 6,label: 'Friday'},
             {id: 7,label: 'Saturday'}
-        ]
+        ];
     })())
 
     .constant('daysObject',(function(){ // all days in month for playlist time setting
@@ -139,8 +139,7 @@ angular.module('piConfig', [])
             {id: 25,label: '25'}, {id: 26,label: '26'}, {id: 27,label: '27'},
             {id: 28,label: '28'}, {id: 29,label: '29'}, {id: 30,label: '30'},
             {id: 31,label: '31'}
-        ]
-
+        ];
     })())
 
     .constant('TZNames', (function() {
@@ -656,5 +655,5 @@ angular.module('piConfig', [])
             'UTC',
             'EST',
             'GMT'
-        ]
+        ];
     })());

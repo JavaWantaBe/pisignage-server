@@ -1,4 +1,4 @@
-'use strict'
+'use strict';
 
 angular.module('piSettings.controllers', []).
     controller('SettingsCtrl', function ($scope, $http, piUrls, $state, $modal,$window) {
@@ -17,7 +17,7 @@ angular.module('piSettings.controllers', []).
 
             }).error(function (err) {
                 console.log(err);
-            })
+            });
         $scope.upload = {
             onstart: function (files) {
                 console.log('start upload');
@@ -36,7 +36,7 @@ angular.module('piSettings.controllers', []).
                 animation: true,
                 scope: $scope,
                 templateUrl: '/app/templates/confirm-popup.html'
-            })
+            });
             $scope.ok = function () {
                 $http.delete(piUrls.licenses + filename)
                     .success(function (data) {
@@ -48,12 +48,12 @@ angular.module('piSettings.controllers', []).
                         }
 
                     }).error(function (err) {
-                    })
-            }
+                    });
+            };
             $scope.cancel = function () {
                 $scope.modal.dismiss();
-            }
-        }
+            };
+        };
 
         //settings part
         $http.get(piUrls.settings)
@@ -63,7 +63,7 @@ angular.module('piSettings.controllers', []).
 
             }).error(function (err) {
                 console.log(err);
-            })
+            });
 
         $scope.saveSettings= function(){
             $http.post(piUrls.settings, $scope.settings)
@@ -78,6 +78,6 @@ angular.module('piSettings.controllers', []).
                 })
                 .error(function(data, status) {
                 });
-        }
+        };
 
     });

@@ -5,8 +5,6 @@ module.exports = {
     https: true,
     port: process.env.PORT || 443,
     mongo: {
-        uri: process.env.MONGOLAB_URI ||
-        process.env.MONGOHQ_URL ||
-        'mongodb://localhost/pisignage-server'
+        uri: process.env.MONGOLAB_URI || process.env.MONGOHQ_URL || 'mongodb://localhost/pisignage-server'
     }
 };

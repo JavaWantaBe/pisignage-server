@@ -18,7 +18,8 @@ const mongoose = require('mongoose'),
  * @param res
  */
 exports.index = function (req, res) {
-    let files, dbdata;
+    let files,
+        dbdata;
 
     async.series([
         function(next) {
@@ -45,7 +46,7 @@ exports.index = function (req, res) {
         }
     ], function(err) {
         if (err)
-            rest.sendError(res,err);
+            rest.sendError(res, err);
         else
             rest.sendSuccess(res, "Sending media directory files: ",
                 {files: files, dbdata: dbdata, systemAssets: config.systemAssets});

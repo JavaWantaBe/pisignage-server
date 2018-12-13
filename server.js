@@ -4,7 +4,6 @@
 process.env.NODE_ENV = process.env.NODE_ENV || "development";
 
 const express = require("express"),
-      // oldSocketio = require("socket.io"),
       socketio = require("socket.io");
 
 const path = require('path'),
@@ -20,8 +19,7 @@ const mongoose = require('mongoose');
 let app = express();
 let server = null;
 
-// let io = oldSocketio.listen(server);
-
+// Socket IO
 let ioNew = socketio(server,{
     path: '/newsocket.io',
     serveClient: true,
@@ -51,26 +49,9 @@ mongoose.connect(config.mongo.uri, config.mongo.options).then(
     }
 );
 
-// Connect to database
-// mongoose.Promise = global.Promise;
-
-// db.connection.on("error", () => {
-//     console.log('********************************************');
-//     console.log('*          MongoDB Process not running     *');
-//     console.log('********************************************\n');
-//     process.exit(1);
-// });
-
-//
 fs.readdirSync(modelsPath).forEach(file => {
     require(modelsPath + '/' + file);
 });
-
-console.log('********************************************************************');
-console.log('*    After update if you do not see your groups, please change     *');
-console.log('*    change the uri variable to "mongodb://localhost/pisignage-dev"*');
-console.log('*    in config/env/development.js and restart the server           *');
-console.log('******************************************************************\n');
 
 // Express settings
 require('./config/express')(app);
@@ -93,12 +74,11 @@ else {
 }
 
 //Bootstrap socket.io
-// require('./app/controllers/server-socket').startSIO(io);
 require('./app/controllers/server-socket-new').startSIO(ioNew);
 require('./app/controllers/scheduler');
 
 server.listen(config.port, () => {
-    logger.info('Express server listening on port:' + config.port + ' in:' + app.get('env') + 'mode');
+    logger.info('Express server listening on port:' + config.port + ' in:' + app.get('env') + ' mode');
 });
 
 server.on('connection', (socket) => {
@@ -109,4 +89,11 @@ server.on('connection', (socket) => {
 
 // Expose app
 module.exports = app;
+
+
+// console.log('********************************************************************');
+// console.log('*    After update if you do not see your groups, please change     *');
+// console.log('*    change the uri variable to "mongodb://localhost/pisignage-dev"*');
+// console.log('*    in config/env/development.js and restart the server           *');
+// console.log('******************************************************************\n');
 

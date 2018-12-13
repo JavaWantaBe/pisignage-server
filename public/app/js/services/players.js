@@ -34,14 +34,14 @@ angular.module('piPlayers.services', [])
                         playerLoader.player.currentVersion = data.data.currentVersion;
                         playerLoader.player.players.forEach(function(player){
                             if (!player.isConnected)
-                                player.statusClass = "text-danger"
+                                player.statusClass = "text-danger";
                             else if (!player.playlistOn)
-                                player.statusClass = "text-lightyellow"
+                                player.statusClass = "text-lightyellow";
                             else
-                                player.statusClass = "text-lightgreen"
+                                player.statusClass = "text-lightgreen";
 
                             if (player.uptime) {
-                                player.uptime = parseInt(player.uptime)
+                                player.uptime = parseInt(player.uptime);
                                 if (player.uptime > 48 * 3600)
                                     player.uptimeFormatted = (player.uptime/(24 * 3600)).toFixed(1) + " days";
                                 else if (player.uptime > 3 * 3600)
@@ -67,7 +67,7 @@ angular.module('piPlayers.services', [])
                 .error(function (data, status) {
                     cb(true);
                 });
-        }
+        };
 
         var playerLoader = {
             player: {
@@ -93,15 +93,15 @@ angular.module('piPlayers.services', [])
 
             selectGroup: function(group) {
                 playerLoader.group.selectedGroup = group;
-                $state.go("home.players.players",{group: group?group._id:null})
+                $state.go("home.players.players",{group: group?group._id:null});
                 //notifyObservers();
             },
             registerObserverCallback: function(callback,key){
                 observerCallbacks[key] = callback;
             }
-        }
+        };
 
-        var loadAllModels = function() {
+        let loadAllModels = function() {
             async.series([
                     function (next) {
                         $http.get(piUrls.groups, {params:{all: "all"}})
@@ -109,13 +109,13 @@ angular.module('piPlayers.services', [])
                                 if (data.success) {
                                     playerLoader.group.groups = data.data;
                                     playerLoader.group.groupNames = playerLoader.group.groups.map(function(group){
-                                        return (group.name)
+                                        return (group.name);
                                     });
                                 }
-                                next()
+                                next();
                             })
                             .error(function (data, status) {
-                                next()
+                                next();
                             });
                     },
                     function (next) {
@@ -133,7 +133,7 @@ angular.module('piPlayers.services', [])
                                         (playerLoader.playlist.playlists[itemIndex].settings.domination && playerLoader.playlist.playlists[itemIndex].settings.domination.enable)  ||
                                         (playerLoader.playlist.playlists[itemIndex].settings.event && playerLoader.playlist.playlists[itemIndex].settings.event.enable)            ||
                                         (playerLoader.playlist.playlists[itemIndex].settings.audio && playerLoader.playlist.playlists[itemIndex].settings.audio.enable)
-                                    ))
+                                    ));
                                 });
                                 
                                 next();
@@ -148,8 +148,8 @@ angular.module('piPlayers.services', [])
                 ], function (err) {
                     notifyObservers();
                 }
-            )
-        }
+            );
+        };
         loadAllModels();
         return playerLoader;
     });

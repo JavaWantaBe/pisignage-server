@@ -86,7 +86,7 @@ angular.module('piAssets.services', [])
             registerObserverCallback: function(callback,key){
                 observerCallbacks[key] = callback;
             }
-        }
+        };
 
 
         var assemblePlaylistAssets = function() {
@@ -99,14 +99,15 @@ angular.module('piAssets.services', [])
                 };
                 playlist.assets.forEach(function (asset) {
 
-                    if (asset == null)
+                    if (asset === null)
                         return;
                     var obj = {};
+
                     obj.fileDetails = assetLoader.asset.filesDetails[asset.filename] || {name: asset.filename};
                     obj.playlistDetails = asset;
-                    obj.deleted = (assetLoader.asset.files.indexOf(asset.filename) == -1) &&
-                                        (asset.filename.indexOf("_system") != 0);
-                    assetLoader.asset.groupWiseAssets[playlist.name].assets.push(obj)
+                    obj.deleted = (assetLoader.asset.files.indexOf(asset.filename) === -1) &&
+                                        (asset.filename.indexOf("_system") !== 0);
+                    assetLoader.asset.groupWiseAssets[playlist.name].assets.push(obj);
 
                     /*if (asset.side) {
                         var obj = {};
@@ -123,7 +124,7 @@ angular.module('piAssets.services', [])
                         assetLoader.asset.groupWiseAssets[playlist.name].assets.push(obj)
                     }*/
 
-                })
+                });
             });
             assetLoader.asset.allAssets = {
                 playlist: null,
@@ -139,11 +140,12 @@ angular.module('piAssets.services', [])
                 if (assetLoader.asset.filesDetails[filename])
                     obj.playlistDetails.duration = parseInt(assetLoader.asset.filesDetails[filename].duration);
                 obj.playlistDetails.duration = obj.playlistDetails.duration || $rootScope.serverConfig.defaultDuration;
-                assetLoader.asset.allAssets.assets.push(obj)
+                assetLoader.asset.allAssets.assets.push(obj);
                 //}
-            })
+            });
             notifyObservers();
-        }
+        };
+
         var loadAllModels = function() {
             async.series([
                     function (next) {
@@ -152,10 +154,10 @@ angular.module('piAssets.services', [])
                                 if (data.success) {
                                     assetLoader.label.labels = data.data;
                                 }
-                                next()
+                                next();
                             })
                             .error(function (data, status) {
-                                next()
+                                next();
                             });
                     },
                     function (next) {
@@ -169,14 +171,14 @@ angular.module('piAssets.services', [])
                                             if (assetLoader.asset.files.indexOf(dbdata.name) >= 0) {
                                                 assetLoader.asset.filesDetails[dbdata.name] = dbdata;
                                             }
-                                        })
+                                        });
                                         assetLoader.updateLabelsCount();
                                     }
                                 }
-                                next()
+                                next();
                             })
                             .error(function (data, status) {
-                                next()
+                                next();
                             });
                     },
                     function (next) {
@@ -198,8 +200,8 @@ angular.module('piAssets.services', [])
                     assetLoader.playlist.selectedPlaylist = null;
                     assemblePlaylistAssets();
                 }
-            )
-        }
+            );
+        };
         loadAllModels();
         return assetLoader;
-    })
+    });

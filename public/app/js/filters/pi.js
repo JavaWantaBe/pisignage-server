@@ -10,7 +10,7 @@ angular.module('pisignage.filters', []).
 
             var end = "...";
 
-            if (text == null || text.length == 0)
+            if (text == null || text.length === 0)
                 return null;
 
             if (!angular.isString(text))
@@ -34,5 +34,5 @@ angular.module('pisignage.filters', []).
             }
             str1 += str;
             return str1;
-        }
+        };
     });
