@@ -83,6 +83,8 @@ module.exports = function (app) {
             }
             next();
         });
+
+        app.disable('view cache');
         app.use(errorHandler());
         app.locals.pretty = true;
         app.locals.compileDebug = true;
