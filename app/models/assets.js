@@ -1,3 +1,5 @@
+'use strict';
+
 const mongoose = require('mongoose'),
       Schema = mongoose.Schema;
 
@@ -9,8 +11,8 @@ let AssetSchema = new Schema({
     size: String,
     thumbnail: String,
     labels: [],
-    playlists:              [],
-    validity:               {enable:Boolean, startdate:String, enddate:String},
+    playlists: [],
+    validity: {enable:Boolean, startdate:String, enddate:String},
     createdAt: {type: Date, default: Date.now},
     createdBy: {_id: {type: Schema.ObjectId, ref: 'User'}, name: String}
 });
@@ -23,7 +25,7 @@ AssetSchema.statics = {
             .exec(cb);
     },
     list: function (options, cb) {
-        var criteria = options.criteria || {};
+        let criteria = options.criteria || {};
 
         this.find(criteria)
             .sort({name: 1}) // sort by date

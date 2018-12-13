@@ -1,9 +1,9 @@
 'use strict';
 
-var GoogleStrategy = require('passport-google-oauth').OAuth2Strategy,
-    passport = require('passport'),
-    config = require('../../config/config'),
-    assets = require('./assets');
+const GoogleStrategy = require('passport-google-oauth').OAuth2Strategy,
+      passport = require('passport'),
+      config = require('../../config/config'),
+      assets = require('./assets');
 
 
 if(config.gCalendar.CLIENT_ID && config.gCalendar.CLIENT_SECRET ){
@@ -15,7 +15,7 @@ if(config.gCalendar.CLIENT_ID && config.gCalendar.CLIENT_SECRET ){
             scope: ['openid', 'email', 'https://www.googleapis.com/auth/calendar']
         },
         function (accessToken, refreshToken, params, profile, done) {
-            var data = {
+            let data = {
                 tokens: {
                     access_token: accessToken,
                     refresh_token: refreshToken,
@@ -24,7 +24,7 @@ if(config.gCalendar.CLIENT_ID && config.gCalendar.CLIENT_SECRET ){
                 },
                 profile: profile._json,
                 selectedEmail: profile._json.email
-            }
+            };
             return done(null, data);
         }
     ));
@@ -35,29 +35,29 @@ exports.gCalAuthorize = function (req, res, next) {
     //req._passport.instance._strategies.google._callbackURL = (config.https ? 'https' : 'http') +
     //'://' + req.installation + config.gCalendar.REDIRECT_BASE_URL;
     //console.log(req.url);
-    var obj = {
+    let obj = {
         accessType: 'offline',
         approvalPrompt: 'force',
         session: false,
-        loginHint: req.query['email']
+        loginHint: req.query.email
     };
 
-    passport.authenticate('google', obj, function (err, user, info) {
+    passport.authenticate('google', obj, (err, user, info) => {
     })(req, res, next);
-}
+};
 
 exports.gCalCallback = function (req, res, next) {
-    passport.authenticate('google', {session: false, failureRedirect: '/login'}, function (err, user, info) {
+    passport.authenticate('google', {session: false, failureRedirect: '/login'}, (err, user, info) => {
         //store the tokens in a file using assets controller
         if (!user || !user.profile || !user.profile.email)
             return res.redirect('/');
-        var fname = user.profile.email.slice(0, user.profile.email.indexOf('@')) + '.gcal';
-        assets.createAssetFileFromContent(fname, user, function (err) {
+        let fname = user.profile.email.slice(0, user.profile.email.indexOf('@')) + '.gcal';
+        assets.createAssetFileFromContent(fname, user, (err) => {
             if (err)
                 console.log(err);
             res.redirect('/');
-        })
+        });
 
     })(req, res, next);
-}
+};
 

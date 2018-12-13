@@ -4,6 +4,7 @@ const config = require('../../config/config'),
       rest = require('../others/restware'),
       fs = require('fs'),
       path = require('path'),
+      logger = require('node-logger').createLogger(),
       async = require('async');
 
 let systemPlaylists = [
@@ -93,7 +94,7 @@ exports.index = function (req, res) {
                         try {
                             obj = JSON.parse(data);
                         } catch (e) {
-                            console.log("playlist index parsing error for " + req.installation);
+                            logger.error("playlist index parsing error for " + req.installation);
                         }
 
                         playlist.settings = obj.settings || {};
@@ -153,7 +154,7 @@ exports.getPlaylist = function (req, res) {
                 try {
                     obj = JSON.parse(data);
                 } catch (e) {
-                    console.log("getPlaylist parsing error for " + req.installation);
+                    logger.error("getPlaylist parsing error for " + req.installation);
                 }
                 playlist.settings = obj.settings || {};
                 playlist.assets = obj.assets || [];
@@ -202,7 +203,8 @@ exports.savePlaylist = function (req, res) {
         if (err) {
             rest.sendError(res, "Playlist file read error", err);
         } else {
-            var fileData = {}, dirty = false;
+            let fileData = {},
+                dirty = false;
             fileData.version = 0;
             fileData.layout = "1";
 
@@ -210,7 +212,7 @@ exports.savePlaylist = function (req, res) {
                 try {
                     fileData = JSON.parse(data);
                 } catch (e) {
-                    console.log("savePlaylist parsing error for ")
+                    logger.error("save playlist parsing error for ");
                 }
                 fileData.version = fileData.version || 0;
             }
@@ -249,6 +251,5 @@ exports.savePlaylist = function (req, res) {
             }
         }
     });
-
 };
 

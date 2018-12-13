@@ -6,47 +6,33 @@
 const fs = require('fs'),
       path = require('path'),
       async = require('async'),
+      logger = require('node-logger').createLogger(),
       _ = require('lodash');
 
-/**
- * IP Communications
- * @type {*|*}
- */
 const serverIp = require('ip').address();
 
-/**
- * Configuration variables
- */
 const config = require('../../config/config'),
       rest = require('../others/restware');
 
-/**
- * Database models
- * @type {*|Mongoose}
- */
 const mongoose = require('mongoose'),
       Settings = mongoose.model('Settings');
 
-var settingsModel = null;
-
-/**
- * License directory
- */
-var licenseDir = config.licenseDirPath;
+let licenseDir = config.licenseDirPath;
+let settingsModel = null;
 
 
 /**
  * @brief Gets the .txt files from the license directory
  * @param cb
  */
-var getTxtFiles = function(cb){
+let getTxtFiles = function(cb){
     let txtOnly;
 
-    fs.readdir(licenseDir, function(err,files){
+    fs.readdir(licenseDir, (err,files) => {
         if(err)
             return cb(err,null);
 
-        txtOnly = files.filter(function(file){
+        txtOnly = files.filter((file) => {
             return file.match(/\.txt$/i);  // remove dot, hidden system files
         });
 
@@ -60,7 +46,7 @@ var getTxtFiles = function(cb){
  * @param res
  */
 exports.index = function(req, res){
-    getTxtFiles(function(err, files){
+    getTxtFiles((err, files) => {
         return (err) ?
             rest.sendError(res,'error in reading license directory',err) :
             rest.sendSuccess(res,'total license list ',files);
@@ -73,10 +59,10 @@ exports.index = function(req, res){
  * @param res
  */
 exports.saveLicense = function(req, res){ // save license files
-	let uploadedFiles = req.files["assets"], savedFiles = [];
+	let uploadedFiles = req.files.assets, savedFiles = [];
 		
-	async.each(uploadedFiles,function(file, callback){
-		fs.rename(file.path,path.join(licenseDir, file.originalname), function(err){
+	async.each(uploadedFiles,(file, callback) => {
+		fs.rename(file.path,path.join(licenseDir, file.originalname), (err) => {
 			if(err)
 				return callback(err);
 			savedFiles.push({name: file.originalname , size: file.size});
@@ -84,8 +70,8 @@ exports.saveLicense = function(req, res){ // save license files
 		});
 	},function(err){
 		return (err) ?
-            rest.sendError(res,'Error in saving license ',err) :
-            rest.sendSuccess(res,'License saved successfully',savedFiles);
+            rest.sendError(res,'Error in saving license ', err) :
+            rest.sendSuccess(res,'License saved successfully', savedFiles);
 	});
 };
 
@@ -94,16 +80,16 @@ exports.saveLicense = function(req, res){ // save license files
  * @param req
  * @param res
  */
-exports.deleteLicense = function(req,res){ // delete particular license and return new file list
-	fs.unlink(path.join(licenseDir,req.params['filename']),function(err){
+exports.deleteLicense = function(req, res){ // delete particular license and return new file list
+	fs.unlink(path.join(licenseDir, req.params.filename), (err) => {
 		if(err)
-			return rest.sendError(res,"License "+req.params['filename']+" can't be deleted",err);
+			return rest.sendError(res,"License " + req.params.filename + " can't be deleted", err);
 		
-		getTxtFiles(function(err,files){ // get all license
+		getTxtFiles((err,files) => { // get all license
 			if(err)
 				return rest.sendError(res,'error in reading license directory',err);
 
-			return rest.sendSuccess(res,"License "+req.params['filename']+" deleted successfully",files);
+			return rest.sendSuccess(res,"License " + req.params.filename + " deleted successfully", files);
 		});
 	});
 };
@@ -113,7 +99,7 @@ exports.deleteLicense = function(req,res){ // delete particular license and retu
  * @param cb
  */
 exports.getSettingsModel = function(cb) {
-    Settings.findOne(function (err, settings) {
+    Settings.findOne((err, settings) => {
         if (err || !settings) {
             if (settingsModel) {
                 cb(null, settingsModel);
@@ -133,7 +119,7 @@ exports.getSettingsModel = function(cb) {
  * @param res
  */
 exports.getSettings = function(req,res) {
-    exports.getSettingsModel(function (err, data) {
+    exports.getSettingsModel((err, data) => {
         if (err) {
             return rest.sendError(res, 'Unable to access Settings', err);
         } else {
@@ -171,7 +157,7 @@ exports.updateSettings = function(req, res) {
                 rest.sendSuccess(res, 'Settings Saved', data);
             }
             if (restart)  {
-                console.log("restarting server");
+                logger.info("restarting server");
                 require('child_process').fork(require.main.filename);
                 process.exit(0);
             }
@@ -186,7 +172,7 @@ exports.getSettingsModel(function(err, settings){
     try {
         licenseDir = config.licenseDirPath + (Settings.installation || "local");
     } catch (e) {
-        console.log('Error in fetching model:');
+        logger.error('error in fetching model:');
     }
 });
 

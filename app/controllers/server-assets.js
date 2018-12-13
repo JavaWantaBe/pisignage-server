@@ -11,6 +11,7 @@ const path = require('path'),
       Asset = mongoose.model('Asset'),
       _ = require('lodash'),
       rest = require('../others/restware'),
+      logger = require('node-logger').createLogger(),
       processFile = require('../others/process-file');
 
 let sendResponse = function (res, err) {
@@ -27,14 +28,13 @@ let sendResponse = function (res, err) {
  * @param res
  */
 exports.storeDetails = function (req, res) {
+    let files = req.body.files;
 
-    var files = req.body.files;
-
-    async.eachSeries(files, function (fileObj, array_cb) {
-        var filename = fileObj.name.replace(config.filenameRegex, '');
+    async.eachSeries(files, (fileObj, array_cb) => {
+        let filename = fileObj.name.replace(config.filenameRegex, '');
         processFile.processFile(filename, fileObj.size,  req.body.categories, array_cb);
-    }, function () {
-        console.log("processed " + files.length + " files");
+    }, () => {
+        logger.info("processed " + files.length + " files");
     });
     sendResponse(res);
 };
@@ -68,7 +68,6 @@ exports.updateObject = function(req,res) {
             asset.save(function (err, data) {
                 if (err)
                     return rest.sendError(res, 'Categories saving error', err);
-
                 return rest.sendSuccess(res, 'Categories saved', data);
             });
         }
@@ -81,21 +80,19 @@ exports.updateObject = function(req,res) {
  * @param assets
  */
 exports.updatePlaylist = function(playlist, assets) {
-    Asset.update({playlists:playlist},{$pull:{playlists:playlist}},{multi:true}, function(err,num) {
+    Asset.update({playlists:playlist},{$pull:{playlists:playlist}},{multi:true}, (err,num) => {
         if (err) {
-            return console.log("error in db update for playlist in assets "+err);
+            return logger.error("error in db update for playlist in assets " + err);
         } else {
-            console.log("Deleted playlist from " + num + " records");
+            logger.info("deleted playlist from " + num + " records");
 
-            Asset.update({name:{$in: assets}},{$push:{playlists:playlist}},{multi:true}, function(err,num) {
+            Asset.update({name:{$in: assets}},{$push:{playlists:playlist}},{multi:true}, (err,num) => {
                 if (err) {
-                    return console.log("error in db update for playlist in assets "+err);
+                    return logger.error("error in db update for playlist in assets " + err);
                 } else {
-                    console.log("Updated playlist to " + num + " records")
+                    logger.info("updated playlist to " + num + " records");
                 }
             });
         }
     });
 };
-
-

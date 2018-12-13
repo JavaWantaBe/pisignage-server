@@ -8,14 +8,14 @@
         audio(ng-if='filedetails.type=="audio" || filedetails.type=="radio"',controls)
             source(ng-src='{{filedetails.path}}',type="audio/mpeg")
         iframe(ng-if='filedetails.type=="html"', ng-src='{{ filedetails.path }}')
-        iframe(ng-if='filedetails.type=="pdf"',height="300px",width="100%",ng-src='{{filedetails.path}}')
-        form(role="form",name="linkform",ng-show='fileType=="link"')
+        iframe(ng-if='filedetails.type=="pdf"', height="300px",width="100%",ng-src='{{filedetails.path}}')
+        form(role="form", name="linkform", ng-show='fileType=="link"')
             .row(ng-if="urlLink.type != '.txt'")
                 .col-xs-2.col-xs-offset-1
                     h4.text-muted Address
                 .col-xs-8
                     h4 {{urlLink.link}}
-                        a.btn.btn-link(ng-disabled='!urlLink.link',href="{{urlLink.link}}",target="_blank")
+                        a.btn.btn-link(ng-disabled='!urlLink.link', href="{{urlLink.link}}", target="_blank")
                             i.fa.fa-external-link
             .row
                 .col-xs-2.col-xs-offset-1
@@ -28,36 +28,36 @@
                 .col-sm-9
                     .radio-inline
                         label
-                            input(type='radio',name='radio_none', ng-model='urlLink.hideTitle', value="none")
+                            input(type='radio', name='radio_none', ng-model='urlLink.hideTitle', value="none")
                             small image
                     .radio-inline
                         label
-                            input(type='radio',name='radio_title', ng-model='urlLink.hideTitle', value="title")
+                            input(type='radio', name='radio_title', ng-model='urlLink.hideTitle', value="title")
                             small image&title
                     .radio-inline
                         label
-                            input(type='radio',name='radio_description', ng-model='urlLink.hideTitle', value="description")
+                            input(type='radio', name='radio_description', ng-model='urlLink.hideTitle', value="description")
                             small image&description
                     .radio-inline
                         label
-                            input(type='radio',name='radio_title_noimg', ng-model='urlLink.hideTitle', value="onlytitle")
+                            input(type='radio', name='radio_title_noimg', ng-model='urlLink.hideTitle', value="onlytitle")
                             small title
                     .radio-inline
                         label
-                            input(type='radio',name='radio_description_noimg', ng-model='urlLink.hideTitle', value="onlydescription")
+                            input(type='radio', name='radio_description_noimg', ng-model='urlLink.hideTitle', value="onlydescription")
                             small descr
             .row(ng-if="urlLink.type == '.mrss'")
                 .col-xs-2.col-xs-offset-1
                     h4.text-muted Item duration
                 .col-sm-3
-                    input.form-control(type='number',name='duration' ,placeholder='{{"Duration of each feed item"}}',
+                    input.form-control(type='number', name='duration', placeholder='{{"Duration of each feed item"}}',
                     ng-model='urlLink.duration')
 
             .row(ng-if="urlLink.type == '.txt'")
                 .col-sm-2.text-right
                     label.control-label Optional CSS
                 .col-sm-6
-                    input.form-control(type='text',name='style' ,placeholder='e.g. color:#eee; font-style:italic;',
+                    input.form-control(type='text', name='style', placeholder='e.g. color:#eee; font-style:italic;',
                         ng-model='urlLink.style')
 
             .row(ng-if="urlLink.type == '.txt'")
@@ -84,7 +84,7 @@
 
             .row
                 .col-sm-3.col-sm-offset-2
-                    button.btn.btn-success(ng-disabled='!(linkform.$dirty && linkform.$valid)',ng-click="saveNewChanges()") Update
+                    button.btn.btn-success(ng-disabled='!(linkform.$dirty && linkform.$valid)', ng-click="saveNewChanges()") Update
 
 
         div(ng-if='(fileType=="gcal") && calendar.list.length')

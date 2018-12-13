@@ -7,7 +7,7 @@ const mongoose = require('mongoose'),
       config = require('../../config/config'),
       fs = require('fs'),
       async = require('async'),
-      util = require('util'),
+      logger = require('node-logger').createLogger(),
       path = require('path');
 
 const oldSocketio = require('./server-socket'),
@@ -34,7 +34,7 @@ exports.deploy = function (installation,group, cb) {
 
             Player.find({'group._id': group._id}, function (err, data) {
                 if (err || !data || data.length === 0) {
-                    console.log("Unable to get Players list for deploy,", err);
+                    logger.error("unable to get Players list for deploy:"  + err);
                     async_cb("No Players associated, "+(err?err:""));
                 } else {
                     data.forEach(function (player) {
@@ -52,7 +52,7 @@ exports.deploy = function (installation,group, cb) {
             fs.mkdir(syncPath, function (err) {
                 let filesNotPresent = [];
 
-                console.log("created directory: "+syncPath);
+                logger.info("created directory: " + syncPath);
 
                 async.eachSeries(group.assets, function (file, iterative_cb) {
                         const srcfile = path.join(mediaPath,file),
@@ -61,7 +61,7 @@ exports.deploy = function (installation,group, cb) {
                             fs.stat(srcfile, function (err, stats) {
                                 if (err || !stats.isFile()) {
                                     if (file.indexOf("TV_OFF") === -1) {
-                                        console.log("removing file as it is not present: " + file);
+                                        logger.error("removing file as it is not present: " + file);
                                         //group.assets.splice(group.assets.indexOf(file), 1)       //careful, async gets affected if the array is same
                                         filesNotPresent.push(file);
                                     }
@@ -73,8 +73,8 @@ exports.deploy = function (installation,group, cb) {
                                             if (!cbCalled) {
                                                 if (err) {
                                                     console.log(err);
-                                                    var errMessage = "Unable to copy playlist " + file + " for " + installation
-                                                    util.log(errMessage );
+                                                    let errMessage = "Unable to copy playlist " + file + " for " + installation;
+                                                    logger.error(errMessage );
                                                     iterative_cb(errMessage);
                                                 } else
                                                     iterative_cb();
@@ -83,21 +83,24 @@ exports.deploy = function (installation,group, cb) {
                                         };
 
                                     let rd = fs.createReadStream(srcfile);
-                                    rd.on("error", function(err) {
+                                    rd.on("error", (err) => {
                                         done(err);
                                     });
+
                                     let wr = fs.createWriteStream(dstfile);
-                                    wr.on("error", function(err) {
+                                    wr.on("error", (err) => {
                                         done(err);
                                     });
-                                    wr.on("close", function(ex) {
+
+                                    wr.on("close", (ex) => {
                                         done();
                                     });
-                                    rd.pipe(wr);
 
+                                    rd.pipe(wr);
                                 } else {
-                                    //console.log("file is present; " + file)
-                                    fs.symlink(srcfile, dstfile, function (err) {
+                                    logger.info("file is present; " + file);
+
+                                    fs.symlink(srcfile, dstfile, (err) => {
                                         if (err && (err.code !== 'ENOENT')) {
                                             iterative_cb();
                                         } else {
@@ -109,7 +112,7 @@ exports.deploy = function (installation,group, cb) {
                         });
                     },
                     function (err, result) {
-                        filesNotPresent.forEach(function(file){
+                        filesNotPresent.forEach((file) =>{
                             group.assets.splice(group.assets.indexOf(file), 1);
                         });
                         async_cb(err);
@@ -120,17 +123,17 @@ exports.deploy = function (installation,group, cb) {
         function (async_cb) {
             let syncPath = path.join(config.syncDir, installation, group.name);
 
-            fs.readdir(syncPath, function (err, data) {
+            fs.readdir(syncPath, (err, data) => {
                 if (err)
                     async_cb(err);
                 else {
-                    let files = data.filter(function (file) {
+                    let files = data.filter((file) => {
                         return (file.charAt(0) !== '.');
                     });
                     async.eachSeries(files,
                         function (file, iterative_cb) {
                             if (group.assets.indexOf(file) === -1) {
-                                fs.unlink(path.join(syncPath, file), function (err) {
+                                fs.unlink(path.join(syncPath, file), (err) => {
                                     iterative_cb();
                                 });
                             } else {
@@ -147,18 +150,19 @@ exports.deploy = function (installation,group, cb) {
         function(async_cb){ // brand video check
             let specialFiles = ["brand_intro.mp4","brand_intro_portrait.mp4","welcome.ejs","iot.zip"];
             let filesAdded = [];
+
             async.eachSeries(specialFiles,
                 function(file,iterative_cb){
-                    const syncPath = path.join(config.syncDir,installation,group.name,file),
-                          mediaPath = path.join(config.mediaDir,file);
-                    fs.unlink(syncPath,function(err){
-                        fs.stat(mediaPath, function (err, stats) {
+                    const syncPath = path.join(config.syncDir, installation, group.name, file),
+                          mediaPath = path.join(config.mediaDir, file);
+                    fs.unlink(syncPath, (err) => {
+                        fs.stat(mediaPath, (err, stats) => {
                             if (err || !stats.isFile())
                                 iterative_cb();
                             else {
-                                fs.symlink(mediaPath, syncPath, function (err) {
+                                fs.symlink(mediaPath, syncPath, (err) => {
                                     if (err && (err.code !== 'ENOENT')) {
-                                        console.log('error in creating symlink to ' + file);
+                                        logger.error('error in creating symlink to ' + file);
                                     }
                                     filesAdded.push(file);
                                     iterative_cb();
@@ -172,17 +176,18 @@ exports.deploy = function (installation,group, cb) {
                     async_cb(err);
                 }
             );
-        },function(async_cb){ // send list of asset validity
+        },
+        function(async_cb){ // send list of asset validity
             Asset.find({'validity.enable':true,'name':{'$in':group.assets}},
-                "name validity",function (err, data) {
+                "name validity", (err, data) => {
                     if (!err && data) {
-                        group.assetsValidity = data.map(function(asset){
+                        group.assetsValidity = data.map((asset) => {
                             return ({name:asset.name, startdate:asset.validity.startdate, enddate:asset.validity.enddate});
                         });
-                        console.log(group.assetsValidity)
+                        logger.info(group.assetsValidity);
                     } else {
                         group.assetsValidity = [];
-                        util.log("Asset validity query error for " + installation + ";" + err);
+                        logger.error("asset validity query error for " + installation + ";" + err);
                     }
                     async_cb();
                 });
@@ -192,7 +197,7 @@ exports.deploy = function (installation,group, cb) {
             group.deployedTicker = group.ticker;
 
             if (err) {
-                console.log("Error in deploy: ", err);
+                logger.error("in deploy: ", err);
                 return cb(err, group);
             }
             players[group._id.toString()].forEach(function (player) {
@@ -202,7 +207,7 @@ exports.deploy = function (installation,group, cb) {
                     group.logo, group.logox, group.logoy,group.combineDefaultPlaylist,group.omxVolume,
                     group.loadPlaylistOnCompletion, group.assetsValidity);
             });
-            console.log("sending sync event to players");
+            logger.info("sending sync event to players");
             cb(null, group);
         }
     );

@@ -4,70 +4,23 @@
 process.env.NODE_ENV = process.env.NODE_ENV || "development";
 
 const express = require("express"),
-      oldSocketio = require("919.socket.io"),
+      // oldSocketio = require("socket.io"),
       socketio = require("socket.io");
 
-let mongoose = require('mongoose');
-
 const path = require('path'),
-      fs = require('fs');
-
-// Application Config
-const config = require(path.join(__dirname,'/config/config'));
-
-// Connect to database
-mongoose.Promise = global.Promise;
-
-let db = mongoose.connect(config.mongo.uri, config.mongo.options);
-
-db.connection.on("error",function() {
-    console.log('********************************************');
-    console.log('*          MongoDB Process not running     *');
-    console.log('********************************************\n');
-    process.exit(1);
-});
-
-// check system 
-require('./app/others/system-check')();
+      fs = require('fs'),
+      logger = require('node-logger').createLogger(),
+      config = require(path.join(__dirname, '/config/config'));
 
 // Bootstrap models
-let modelsPath = path.join(__dirname, 'app/models');
-
-//
-fs.readdirSync(modelsPath).forEach(function (file) {
-    require(modelsPath + '/' + file);
-});
-
-console.log('********************************************************************');
-console.log('*    After update if you do not see your groups, please change     *');
-console.log('*    change the uri variable to "mongodb://localhost/pisignage-dev"*');
-console.log('*    in config/env/development.js and restart the server           *');
-console.log('******************************************************************\n');
-
-
-var app = express();
-
-// Express settings
-require('./config/express')(app);
+const modelsPath = path.join(__dirname, 'app/models');
+const mongoose = require('mongoose');
 
 // Start server
-let server;
+let app = express();
+let server = null;
 
-if (config.https) {
-    const https_options = {
-        ca: fs.readFileSync("/home/ec2-user/.ssh/intermediate.crt"),
-        key: fs.readFileSync("/home/ec2-user/.ssh/pisignage-server.key"),
-        cert: fs.readFileSync("/home/ec2-user/.ssh/pisignage-server.crt")
-    };
-    server = require('https').createServer(https_options, app);
-
-    //require('http').createServer(app).listen(80);
-}
-else {
-    server = require('http').createServer(app);
-}
-
-let io = oldSocketio.listen(server);
+// let io = oldSocketio.listen(server);
 
 let ioNew = socketio(server,{
     path: '/newsocket.io',
@@ -79,16 +32,76 @@ let ioNew = socketio(server,{
     maxHttpBufferSize: 10e7
 });
 
+
+/**
+ * System readiness check
+ */
+require('./app/others/system-check')();
+
+/**
+ * Connect to database
+ */
+mongoose.connect(config.mongo.uri, config.mongo.options).then(
+    () => {
+        logger.info('attached to database');
+    },
+    err => {
+        logger.error('unable to attach to database');
+        process.exit(1);
+    }
+);
+
+// Connect to database
+// mongoose.Promise = global.Promise;
+
+// db.connection.on("error", () => {
+//     console.log('********************************************');
+//     console.log('*          MongoDB Process not running     *');
+//     console.log('********************************************\n');
+//     process.exit(1);
+// });
+
+//
+fs.readdirSync(modelsPath).forEach(file => {
+    require(modelsPath + '/' + file);
+});
+
+console.log('********************************************************************');
+console.log('*    After update if you do not see your groups, please change     *');
+console.log('*    change the uri variable to "mongodb://localhost/pisignage-dev"*');
+console.log('*    in config/env/development.js and restart the server           *');
+console.log('******************************************************************\n');
+
+// Express settings
+require('./config/express')(app);
+
+/**
+ * HTTP/HTTPS RUN
+ */
+if (config.https) {
+    const https_options = {
+        ca: fs.readFileSync("/home/ec2-user/.ssh/intermediate.crt"),
+        key: fs.readFileSync("/home/ec2-user/.ssh/pisignage-server.key"),
+        cert: fs.readFileSync("/home/ec2-user/.ssh/pisignage-server.crt")
+    };
+
+    server = require('https').createServer(https_options, app);
+    //require('http').createServer(app).listen(80);
+}
+else {
+    server = require('http').createServer(app);
+}
+
 //Bootstrap socket.io
-require('./app/controllers/server-socket').startSIO(io);
+// require('./app/controllers/server-socket').startSIO(io);
 require('./app/controllers/server-socket-new').startSIO(ioNew);
 require('./app/controllers/scheduler');
 
-server.listen(config.port, function () {
-    console.log('Express server listening on port %d in %s mode', config.port, app.get('env'));
+server.listen(config.port, () => {
+    logger.info('Express server listening on port:' + config.port + ' in:' + app.get('env') + 'mode');
 });
 
-server.on('connection', function(socket) {
+server.on('connection', (socket) => {
     // 60 minutes timeout
     socket.setTimeout(3600000);
 });

@@ -1,8 +1,16 @@
+'use strict';
+
 const fs = require('fs'),
       sanitizeHtml = require('sanitize-html'),
-      path = require('path'),
-      library = '\n<script src="../piSignagePro/templates/screen.min.js"></script>\n';
+      path = require('path');
 
+const library = '\n<script src="../piSignagePro/templates/screen.min.js"></script>\n';
+
+/**
+ *
+ * @param assetsDir
+ * @param templateName
+ */
 exports.modifyHTML = function(assetsDir,templateName){
 	let closingBodyIndex,
         modifiedData,
@@ -14,7 +22,7 @@ exports.modifyHTML = function(assetsDir,templateName){
 
     templatePath = path.join(assetsDir, templateName);
 
-    fs.readFile(templatePath,'utf8',function(err,data){
+    fs.readFile(templatePath,'utf8', (err,data) => {
         if(err)
            return console.log('error','custom_layout File Read Error',err);
         //remove script tags
@@ -33,7 +41,7 @@ exports.modifyHTML = function(assetsDir,templateName){
         closingBodyIndex = sanitize.lastIndexOf('</body>');
         modifiedData = sanitize.slice(0,closingBodyIndex)+library+sanitize.slice(closingBodyIndex);
         
-        fs.writeFile(templatePath,modifiedData,function(err){
+        fs.writeFile(templatePath,modifiedData, (err) => {
             // template modification successful
         });
     });

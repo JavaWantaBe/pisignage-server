@@ -3,10 +3,11 @@
 let iosockets = null;     //holds all the clients io.sockets
 
 const players = require('./players'),
+      logger = require('node-logger').createLogger(),
       _ = require('lodash');
 
 let handleClient = function (socket) {
-    console.log("connection with 2.1.1 socket.io : " + socket.id);
+    logger.info("connection with 2.1.1 socket.io : " + socket.id);
     socket.on('status', function (settings, status, priority) {
         let statusObject = _.extend(
             {
@@ -40,7 +41,7 @@ let handleClient = function (socket) {
 
     socket.on('disconnect', function (reason) {
         players.updateDisconnectEvent(socket.id,reason);
-        console.log("disconnect event: " + socket.id);
+        logger.info("disconnect event: " + socket.id);
     });
 };
 

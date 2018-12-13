@@ -1,19 +1,19 @@
 'use strict';
 
-var express = require('express'),
-    router = express.Router();
+const express = require('express'),
+      router = express.Router();
 
-var multer = require('multer'),
-    config = require('./config'),
-    upload = multer({dest:config.uploadDir});
+const multer = require('multer'),
+      config = require('./config'),
+      upload = multer({dest:config.uploadDir});
 
-var assets = require('../app/controllers/assets'),
-    playlists = require('../app/controllers/playlists'),
-    players = require('../app/controllers/players'),
-    groups = require('../app/controllers/groups'),
-    labels = require('../app/controllers/labels'),
-    licenses  = require('../app/controllers/licenses');
-    //gcalAuthorize = require('../app/controllers/gcal-authorize');
+const assets = require('../app/controllers/assets'),
+      playlists = require('../app/controllers/playlists'),
+      players = require('../app/controllers/players'),
+      groups = require('../app/controllers/groups'),
+      labels = require('../app/controllers/labels'),
+      licenses  = require('../app/controllers/licenses');
+      // gcalAuthorize = require('../app/controllers/gcal-authorize');
 
 /**
  * Application routes
@@ -74,7 +74,7 @@ router.post('/api/labels/:label', labels.updateObject);
 router.delete('/api/labels/:label', labels.deleteObject);
 
 require('../app/controllers/licenses').getSettingsModel(function(err,settings){
-    var uploadLicense = multer({dest:(config.licenseDirPath+(settings.installation || "local"))});
+    let uploadLicense = multer({dest:(config.licenseDirPath+(settings.installation || "local"))});
     router.post('/api/licensefiles',uploadLicense.fields([{name:'assets',maxCount: 10}]),licenses.saveLicense);
 });
 
@@ -89,4 +89,3 @@ router.get('/api/serverconfig',licenses.getSettings);
 router.param('label', labels.loadObject);
 
 module.exports = router;
-

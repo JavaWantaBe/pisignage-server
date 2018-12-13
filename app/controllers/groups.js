@@ -1,32 +1,32 @@
 'use strict';
 
-var mongoose = require('mongoose'),
-    Group = mongoose.model('Group'),
+const mongoose = require('mongoose'),
+      Group = mongoose.model('Group'),
+      fs = require('fs'),
+      config = require('../../config/config'),
+      rest = require('../others/restware'),
+      _ = require('lodash'),
+      path = require('path'),
+      async = require('async');
 
-    fs = require('fs'),
-    config = require('../../config/config'),
+const serverMain = require('./server-main'),
+      licenses = require('./licenses');
 
-    rest = require('../others/restware'),
-    _ = require('lodash'),
-
-    path = require('path'),
-    async = require('async');
-
-var serverMain = require('./server-main'),
-    licenses = require('./licenses');
-
-var installation;
+let installation;
 
 licenses.getSettingsModel(function(err,settings){
     installation = settings.installation || "local";
 });
 
-
-
+/**
+ *
+ * @param group
+ * @param cb
+ */
 exports.newGroup = function (group, cb) {
     let object;
 
-    Group.findOne({name:group.name}, function(err,data) {
+    Group.findOne({name:group.name}, (err,data) => {
         if (err || !data) {
             object = new Group(group);
         } else {
@@ -37,11 +37,11 @@ exports.newGroup = function (group, cb) {
             console.log("can not be null: "+object.name);
             return cb('Unable to create a group folder in server: ' + object.name);
         }
-        fs.mkdir(path.join(config.syncDir, installation, object.name), function(err){
+        fs.mkdir(path.join(config.syncDir, installation, object.name), (err) => {
             if (err && (err.code !== 'EEXIST'))
                 return cb('Unable to create a group folder in server: '+err);
             else {
-                object.save(function (err, data) {
+                object.save((err, data) => {
                     cb(err,data);
                 });
             }
@@ -51,8 +51,7 @@ exports.newGroup = function (group, cb) {
 
 //Load a object
 exports.loadObject = function (req, res, next, id) {
-
-    Group.load(id, function (err, object) {
+    Group.load(id, (err, object) => {
         if (err || !object)
             return rest.sendError(res,'Unable to get group details', err);
 
@@ -61,23 +60,27 @@ exports.loadObject = function (req, res, next, id) {
     });
 };
 
-//list of objects
+/**
+ * list of objects
+ * @param req
+ * @param res
+ */
 exports.index = function (req, res) {
     let criteria = {};
 
-    if (req.query['string']) {
-        var str = new RegExp(req.query['string'], "i");
-        criteria['name'] = str;
+    if (req.query.string) {
+        let str = new RegExp(req.query.string, "i");
+        criteria.name = str;
     }
 
-    if (req.query['all']) {
-        criteria['all'] = true;
+    if (req.query.all) {
+        criteria.all = true;
     }
 
-    var page = req.query['page'] > 0 ? req.query['page'] : 0;
-    var perPage = req.query['per_page'] || 500;
+    let page = req.query.page > 0 ? req.query.page : 0;
+    let perPage = req.query.per_page || 500;
 
-    var options = {
+    let options = {
         perPage: perPage,
         page: page,
         criteria: criteria
@@ -91,23 +94,31 @@ exports.index = function (req, res) {
     });
 };
 
+/**
+ *
+ * @param req
+ * @param res
+ * @returns {*}
+ */
 exports.getObject = function (req, res) {
-
-    var object = req.object;
+    let object = req.object;
 
     if (object) {
         return rest.sendSuccess(res, 'Group details', object);
     } else {
         return rest.sendError(res, 'Unable to retrieve Group details', err);
     }
-
 };
 
+/**
+ *
+ * @param req
+ * @param res
+ */
 exports.createObject = function (req, res) {
+    let object = req.body;
 
-    var object = req.body;
-
-    exports.newGroup(object, function (err, data) {
+    exports.newGroup(object, (err, data) => {
         if (err)
             return rest.sendError(res, err);
         else
@@ -116,7 +127,6 @@ exports.createObject = function (req, res) {
 };
 
 exports.updateObject = function (req, res) {
-
     let object = req.object;
     delete req.body.__v;        //do not copy version key
 
@@ -138,7 +148,7 @@ exports.updateObject = function (req, res) {
     };
 
     if (object.name !== req.body.name) {
-        fs.mkdir(path.join(config.syncDir, installation, req.body.name), function (err) {
+        fs.mkdir(path.join(config.syncDir, installation, req.body.name), (err) => {
             if (err && (err.code !== 'EEXIST'))
                 console.log('Unable to create a group folder in server: ' + err);
         });
@@ -151,7 +161,7 @@ exports.updateObject = function (req, res) {
         object.deployedTicker = object.ticker;
     }
 
-    //disable animation for the timebeing
+    //disable animation for the time being
     //object.animationEnable = false;
     object.save(function (err, data) {
         if (!err && req.body.deploy) {
@@ -160,10 +170,15 @@ exports.updateObject = function (req, res) {
             saveObject(err, object);
         }
     });
-
 };
 
 
+/**
+ *
+ * @param req
+ * @param res
+ * @returns {*}
+ */
 exports.deleteObject = function (req, res) {
     let object = req.object;
 

@@ -8,6 +8,7 @@ const mongoose = require('mongoose'),
       _ = require('lodash'),
       path = require('path'),
       async = require('async'),
+      logger = require('node-logger').createLogger(),
       config = require('../../config/config');
 
 const oldSocketio = require('./server-socket'),
@@ -53,7 +54,7 @@ readVersions();
 
 fs.mkdir(config.logStoreDir, function(err) {
     if (err && (err.code !== 'EEXIST')) {
-        console.log("Error creating logs directory, "+ err.code);
+        logger.error("error creating logs directory, " + err.code);
     }
 });
 
@@ -69,7 +70,7 @@ function checkPlayersWatchdog() {
                 if (!err && player && player.isConnected) {
                     player.isConnected = false;
                     player.save();
-                    console.log("disconnect: "+player.installation+"-"+player.name+";reason: checkPlayersWatchdog");
+                    debuglog("ERROR: disconnect: " + player.installation + "-" + player.name + ";reason: checkPlayersWatchdog");
                 }
                 delete activePlayers[playerId];
                 cb();
@@ -87,7 +88,7 @@ function checkPlayersWatchdog() {
 
 Player.update({"isConnected": true},{$set:{"isConnected": false}},{ multi: true }, function(err, num) {
     if (!err && num)
-        console.log("Reset isConnected for "+num.nModified+" players");
+        logger.error("reset is connected for " + num.nModified + " players");
     checkPlayersWatchdog();
 });
 
@@ -98,12 +99,16 @@ licenses.getSettingsModel(function(err,data){
     settings = data;
     installation = settings.installation || "local";
 
-    Group.update({name:"default"},{name:"default",description:"Default group for Players"},{upsert:true},function(err){
-        fs.mkdir(path.join(config.syncDir,installation), function (err) {
-            fs.mkdir(path.join(config.syncDir,installation, "default"), function (err) {
+    Group.update({ name:"default" },
+        {name: "default",
+            description: "Default group for Players"},
+        {upsert: true},
+        (err) => {
+        fs.mkdir(path.join(config.syncDir, installation), (err) => {
+            fs.mkdir(path.join(config.syncDir, installation, "default"), (err) => {
             });
         });
-        Group.findOne({name: 'default'}, function (err, data) {
+        Group.findOne({name: 'default'}, (err, data) => {
             if (!err && data)
                 defaultGroup = data;
         });
@@ -121,9 +126,9 @@ exports.updateDisconnectEvent = function(socketId, reason) {
             player.isConnected = false;
             player.save();
             delete activePlayers[player._id.toString()];
-            console.log("disconnect: "+player.installation+"-"+player.name+";reason: "+reason);
+            logger.error("disconnect: " + player.installation + "-" + player.name + ";reason: " + reason);
         } else {
-            //console.log("not able to find player for disconnect event: "+socketId);
+            logger.error("not able to find player for disconnect event: " + socketId);
         }
     });
 };
@@ -209,7 +214,7 @@ let sendConfig = function (player, group, periodic) {
         retObj.sshPassword = settings.sshPassword;
     retObj.currentTime = Date.now();
 
-    var socketio = (player.newSocketIo?newSocketio:oldSocketio);
+    let socketio = (player.newSocketIo?newSocketio:oldSocketio);
     socketio.emitMessage(player.socket, 'config', retObj);
 };
 
@@ -221,7 +226,7 @@ let sendConfig = function (player, group, periodic) {
  * @param id
  */
 exports.loadObject = function (req, res, next, id) {
-    Player.load(id, function (err, object) {
+    Player.load(id, (err, object) => {
         if (err || !object)
             return rest.sendError(res,'Unable to get group details',err);
 
@@ -238,36 +243,36 @@ exports.loadObject = function (req, res, next, id) {
 exports.index = function (req, res) {
     let criteria = {};
 
-    if (req.query['group']) {
-        criteria['group._id'] = req.query['group'];
+    if (req.query.group) {
+        criteria.group._id = req.query.group;
     }
 
-    if (req.query['groupName']) {
-        criteria['group.name'] = req.query['groupName'];
+    if (req.query.groupName) {
+        criteria.group.name = req.query.groupName;
     }
 
-    if (req.query['string']) {
-        criteria['name'] = new RegExp(req.query['string'], "i");
+    if (req.query.string) {
+        criteria.name = new RegExp(req.query.string, "i");
     }
 
-    if (req.query['location']) {
-        criteria['$or'] = [ {'location':req.query['location']}, {'configLocation':req.query['location']} ];
+    if (req.query.location) {
+        criteria.$or = [ {'location':req.query.location}, {'configLocation':req.query.location} ];
     }
 
-    if (req.query['label']) {
-        criteria['labels'] = req.query['label'];
+    if (req.query.label) {
+        criteria.labels = req.query.label;
     }
 
-    if (req.query['currentPlaylist']) {
-        criteria['currentPlaylist'] = req.query['currentPlaylist'];
+    if (req.query.currentPlaylist) {
+        criteria.currentPlaylist = req.query.currentPlaylist;
     }
 
-    if (req.query['version']) {
-        criteria['version'] = req.query['version'];
+    if (req.query.version) {
+        criteria.version = req.query.version;
     }
 
-    let page = req.query['page'] > 0 ? req.query['page'] : 0;
-    let perPage = req.query['per_page'] || 500;
+    let page = req.query.page > 0 ? req.query.page : 0;
+    let perPage = req.query.per_page || 500;
 
     let options = {
         perPage: perPage,
@@ -322,10 +327,10 @@ exports.getObject = function (req, res) {
 exports.createObject = function (req, res) {
     let player;
 
-    Player.findOne({cpuSerialNumber: req.body.cpuSerialNumber}, function (err, data) {
+    Player.findOne({cpuSerialNumber: req.body.cpuSerialNumber}, (err, data) => {
 
         if (err) {
-            console.log("ERROR: while retrieving player data: " + err);
+            logger.error("while retrieving player data: " + err);
         }
 
         if (data) {
@@ -338,14 +343,15 @@ exports.createObject = function (req, res) {
                 player.group = defaultGroup;
         }
         player.registered = false;
-
         player.installation = installation;
-        console.log(player);
+
+        logger.info(player);
+
         Group.findById(player.group._id, function(err,group) {
             if (!err && group) {
                 sendConfig(player,group,true);
             } else {
-                console.log("ERROR: unable to find group for the player");
+                logger.error("unable to find group for the player");
             }
         });
         player.save(function (err, obj) {
@@ -410,7 +416,7 @@ exports.updateObject = function (req, res) {
                 if (!err && group) {
                     sendConfig(object, group, true);
                 } else {
-                    console.log("ERROR: unable to find group for the player");
+                    logger.error("unable to find group for the player");
                 }
             });
     });
@@ -438,7 +444,7 @@ exports.deleteObject = function (req, res) {
  * @param obj
  */
 exports.updatePlayerStatus = function (obj) {
-    var retObj = {};
+    let retObj = {};
 
     updatePlayerCount[obj.cpuSerialNumber] = (updatePlayerCount[obj.cpuSerialNumber] || 0) + 1;
     if (updatePlayerCount[obj.cpuSerialNumber] > perDayCount) {
@@ -447,7 +453,7 @@ exports.updatePlayerStatus = function (obj) {
 
     Player.findOne({cpuSerialNumber: obj.cpuSerialNumber}, function (err, data) {
         if (err) {
-            console.log("ERROR: while retrieving player data: " + err);
+            logger.error("while retrieving player data: " + err);
         } else {
             let player;
 
@@ -485,13 +491,13 @@ exports.updatePlayerStatus = function (obj) {
                             //console.log("communication to "+player.name+" at "+now+", last "+ lastCommunicationFromPlayers[pid]+" did not happen")
                         }
                     } else {
-                        console.log("ERROR: unable to find group for the player");
+                        logger.error("unable to find group for the player");
                     }
                 });
             }
             player.save(function (err, player) {
                 if (err) {
-                    return console.log("ERROR: while saving player status: " + err);
+                    return logger.error("while saving player status: " + err);
                 }
             });
         }
@@ -509,7 +515,7 @@ exports.secretAck = function (sid, status) {
             player.registered = status;
             player.save();
         } else {
-            console.log("ERROR: not able to find player");
+            logger.error("not able to find player");
         }
     });
 };
@@ -566,12 +572,12 @@ exports.swupdate = function (req, res) {
         version = req.body.version || null;
 
     if (!version) {
-        version = 'piimage'+pipkgjson.version+'.zip';
+        version = 'piimage' + pipkgjson.version + '.zip';
     }
 
     let socketio = (object.newSocketIo?newSocketio:oldSocketio);
     socketio.emitMessage(object.socket, 'swupdate',version);
-    console.log("updating to "+(version?version:'piimage'+pipkgjson.version+'.zip'));
+    logger.info("updating to " + (version?version:'piimage' + pipkgjson.version + '.zip'));
 
     return rest.sendSuccess(res, 'SW update command issued');
 };
@@ -590,11 +596,11 @@ exports.upload = function (cpuId, filename, data) {
             if(filename.indexOf('forever_out') === 0 ){
                 fs.writeFile(config.logStoreDir+'/'+cpuId+'_forever_out.log',data,function(err){
                     if(err) {
-                        console.log("error", "ERROR: in writing forever_out log for " + cpuId);
-                        console.log(err);
+                        logger.error("error", "ERROR: in writing forever_out log for " + cpuId);
+                        logger.error(err);
                     }
-                    // else
-                    //     console.log("info","Forever Log file saved for player : "+cpuId);
+                    else
+                        logger.info("info", "Forever Log file saved for player : " + cpuId);
                 });
             } else if (path.extname(filename) === '.log' && filename !== "forever_out.log") {
                 try {
@@ -603,8 +609,8 @@ exports.upload = function (cpuId, filename, data) {
                     logData.playerId = player._id.toString();
                 } catch (e) {
                     //corrupt file
-                    console.log(player.cpuSerialNumber);
-                    console.log("ERROR: corrupt log file: " + filename);
+                    logger.error(player.cpuSerialNumber);
+                    logger.error("corrupt log file: " + filename);
                 }
             } else if (path.extname(filename) === '.events') {
                 let lines = data.split('\n'),
@@ -620,7 +626,7 @@ exports.upload = function (cpuId, filename, data) {
                         events.push(logData);
                     } catch (e) {
                         //corrupt file
-                        //console.log("corrupt log file: "+filename);
+                        logger.error("corrupt log file: " + filename);
                     }
                 }
             }
@@ -628,7 +634,7 @@ exports.upload = function (cpuId, filename, data) {
             let socketio = (player.newSocketIo?newSocketio:oldSocketio);
             socketio.emitMessage(player.socket, 'upload_ack', filename);
         } else {
-            console.log("ignoring file upload: " + filename);
+            logger.info("ignoring file upload: " + filename);
         }
     });
 };
@@ -654,14 +660,14 @@ exports.tvPower = function(req,res){
  */
 exports.piScreenShot = function (sid,data) { // save screen shot in  _screenshots directory
     let img =  Buffer.from(data.data,"base64").toString("binary"),
-        cpuId = data.playerInfo["cpuSerialNumber"];
+        cpuId = data.playerInfo.cpuSerialNumber;
 
     clearTimeout(snapShotTimer[cpuId]);
     delete snapShotTimer[cpuId];
 
     fs.writeFile(path.join(config.thumbnailDir,cpuId + '.jpeg'), img, 'binary',function (err) {
         if (err)
-            console.log('error in  saving screenshot for ' + cpuId, err);
+            logger.error('error in  saving screenshot for ' + cpuId, err);
         if (pendingSnapshots[cpuId]) {
             rest.sendSuccess(pendingSnapshots[cpuId], 'screen shot received',
                 {

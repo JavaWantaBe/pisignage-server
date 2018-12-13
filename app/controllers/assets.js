@@ -3,8 +3,8 @@
 const fs = require('fs'),
       path = require('path'),
       async = require('async'),
-      util = require('util'),
       _ = require('lodash'),
+      logger = require('node-logger').createLogger(),
       fileUtil = require('../others/file-util');
 
 const mongoose = require('mongoose'),
@@ -26,7 +26,7 @@ exports.index = function (req, res) {
                 if (err) {
                     next("Error reading media directory: " + err);
                 } else {
-                    files = data.filter(function (file) {
+                    files = data.filter((file) => {
                         return (file.charAt(0) !== '_' && file.charAt(0) !== '.');
                     });
                     next();
@@ -36,7 +36,7 @@ exports.index = function (req, res) {
         function(next)  {
             Asset.find({}, function (err, data) {
                 if (err) {
-                    util.log("Error reading Asset Collection: "+err);
+                    logger.error("error reading asset collection: " + err);
                 } else {
                     dbdata = data;
                 }
@@ -59,18 +59,20 @@ exports.index = function (req, res) {
  * @returns {*}
  */
 exports.createFiles = function (req, res) {
-    let files = [], data = [];
+    let files = [],
+        data = [];
 
     if (req.files)
-        files = req.files["assets"];
+        files = req.files.assets;
     else
         return rest.sendError(res, "There are no files to be uploaded");
 
     function renameFile(fileObj, next) {
-        console.log("Uploaded file: "+fileObj.path);
-        var filename = fileObj.originalname.replace(config.filenameRegex, '');
+        let filename = fileObj.originalname.replace(config.filenameRegex, '');
 
-        if ((filename).match(config.zipfileRegex)) //unzip won't work with spcaces in file name
+        logger.info("uploaded file: " + fileObj.path);
+
+        if ((filename).match(config.zipfileRegex)) //unzip won't work with spaces in file name
             filename = filename.replace(/ /g,'');
 
         if(filename.match(config.brandRegex)) // change brand video name
@@ -96,7 +98,7 @@ exports.createFiles = function (req, res) {
     async.each(files, renameFile, function (err) {
         if (err) {
             let msg = "File rename error after upload: " + err;
-            util.log(msg);
+            logger.error(msg);
             return rest.sendError(res, msg);
         } else {
             return rest.sendSuccess(res, ' Successfully uploaded files', data);
@@ -119,7 +121,7 @@ exports.updateFileDetails = function (req, res) {
  * @param res
  */
 exports.getFileDetails = function (req, res) {
-    var file = req.params['file'],
+    let file = req.params.file,
         fileData,
         dbData;
 
@@ -138,12 +140,7 @@ exports.getFileDetails = function (req, res) {
                         fileData.type = 'audio';
                     else if (file.match(config.htmlRegex))
                         fileData.type = 'html';
-                    else if (file.match(config.liveStreamRegex)
-                                || file.match(config.omxStreamRegex)
-                                || file.match(config.mediaRss)
-                                || file.match(config.CORSLink)
-                                || file.match(config.linkUrlRegex)
-                    )
+                    else if (file.match(config.liveStreamRegex) || file.match(config.omxStreamRegex) || file.match(config.mediaRss) || file.match(config.CORSLink) || file.match(config.linkUrlRegex))
                         fileData.type = 'link';
                     else if (file.match(config.gcalRegex))
                         fileData.type = 'gcal';
@@ -162,7 +159,7 @@ exports.getFileDetails = function (req, res) {
         function(next) {
             Asset.findOne({name: file}, function (err, data) {
                 if (err) {
-                    util.log("Error reading Asset Collection: " + err);
+                    logger.error("error reading asset collection: " + err);
                 } else {
                     dbData = data;
                 }
@@ -174,14 +171,14 @@ exports.getFileDetails = function (req, res) {
             rest.sendError(res,err);
         else
             rest.sendSuccess(res, 'Sending file details',
-                    {
-                        name: file,
-                        size: ~~(fileData.size / 1000) + ' KB',
-                        ctime: fileData.ctime,
-                        path: '/media/' +  file,
-                        type: fileData.type,
-                        dbdata: dbData
-                    });
+            {
+                name: file,
+                size: Math.floor(fileData.size / 1000) + ' KB',
+                ctime: fileData.ctime,
+                path: '/media/' +  file,
+                type: fileData.type,
+                dbdata: dbData
+            });
     });
 };
 
@@ -192,12 +189,12 @@ exports.getFileDetails = function (req, res) {
  */
 exports.deleteFile = function (req, res) {
 
-    var file = req.params['file'],
+    let file = req.params.file,
         ext = path.extname(file);
 
     async.series([
         function(next) {
-            fs.unlink(path.join(config.mediaDir, file), function (err) {
+            fs.unlink(path.join(config.mediaDir, file), (err) => {
                 if (err)
                     next("Unable to delete file " + file + ';' + err);
                 else
@@ -205,20 +202,21 @@ exports.deleteFile = function (req, res) {
             });
         },
         function(next) {
-            Asset.remove({name: file}, function (err) {
+            Asset.remove({name: file}, (err) => {
                 if (err)
-                    util.log('unable to delete asset from db,' + file);
+                    logger.error('unable to delete asset from db,' + file);
                 next();
             });
         },
         function(next) {
-            var thumbnailPath = path.join(config.thumbnailDir, file);
+            let thumbnailPath = path.join(config.thumbnailDir, file);
+
             if (file.match(config.videoRegex))
                 thumbnailPath += '.png';
             if(file.match(config.videoRegex) || file.match(config.imageRegex)){
-                fs.unlink(thumbnailPath, function (err) {
+                fs.unlink(thumbnailPath, (err) => {
                     if (err)
-                        util.log('unable to find/delete thumbnail: ' + err);
+                        logger.error('unable to find/delete thumbnail: ' + err);
                     next();
                 });
             } else {
@@ -241,29 +239,29 @@ exports.deleteFile = function (req, res) {
 exports.updateAsset = function (req, res) {
 
     if (req.body.newname) {
-        var oldName = req.params['file'],
+        let oldName = req.params.file,
             newName = req.body.newname;
 
         async.series([
             function(next) {
-                fs.rename(path.join(config.mediaDir, oldName), path.join(config.mediaDir, newName), function (err) {
+                fs.rename(path.join(config.mediaDir, oldName), path.join(config.mediaDir, newName), (err) => {
                     if (err) {
-                        next('File rename error: '+ err);
+                        next('file rename error: '+ err);
                     } else {
                         next();
                     }
                 });
             },
             function(next) {
-                Asset.findOne({name: oldName}, function(err, asset){
+                Asset.findOne({name: oldName}, (err, asset) => {
                     if (err || !asset) {
-                        util.log('unable to find asset from db,' + oldName);
+                        logger.error('unable to find asset from db,' + oldName);
                         return next();
                     }
                     asset.name = newName;
-                    asset.save(function(err) {
+                    asset.save((err) => {
                         if (err)
-                            util.log('unable to save asset after rename,' + oldName);
+                            logger.error('unable to save asset after rename,' + oldName);
                         next();
                     });
                 });
@@ -275,12 +273,12 @@ exports.updateAsset = function (req, res) {
                 return rest.sendSuccess(res, 'Successfully renamed file to', newName);
         });
     } else if (req.body.dbdata) {
-        Asset.load(req.body.dbdata._id, function (err, asset) {
+        Asset.load(req.body.dbdata._id, (err, asset) => {
             if (err || !asset) {
                 return rest.sendError(res, 'Categories saving error', err);
             } else {
                 asset = _.extend(asset, req.body.dbdata);
-                asset.save(function (err, data) {
+                asset.save((err, data) => {
                     if (err)
                         return rest.sendError(res, 'Categories saving error', err);
 
@@ -292,23 +290,23 @@ exports.updateAsset = function (req, res) {
 };
 
 exports.getCalendar = function (req, res) {
-    var calFile = path.join(config.mediaDir, req.params['file']);
+    let calFile = path.join(config.mediaDir, req.params.file);
 
-    fs.readFile(calFile, 'utf8', function (err, data) {
+    fs.readFile(calFile, 'utf8', (err, data) => {
         if (err || !data)
             return rest.sendError(res, 'Gcal file read error', err);
 
-        var calData = JSON.parse(data);
+        let calData = JSON.parse(data);
 
-        require('./gcal').index(calData, function (err, list) {
+        require('./gcal').index(calData, (err, list) => {
             if (err) {
                 return rest.sendError(res, 'Gcal error', err);
             } else {
                 return rest.sendSuccess(res, 'Sending calendar details',
                     {
                         profile: calData.profile,
-                        list: _.map(list.items, function (item) {
-                            return _.pick(item, 'summary', 'id')
+                        list: _.map(list.items, (item) => {
+                            return _.pick(item, 'summary', 'id');
                         }),
                         selected: _.find(list.items, {'id': calData.selectedEmail}).summary
                     }
@@ -335,14 +333,14 @@ exports.createAssetFileFromContent = function (name, data, cb) {
  * @param res
  */
 exports.updateCalendar = function (req, res) {
-    let calFile = path.join(config.mediaDir,  req.params['file']);
+    let calFile = path.join(config.mediaDir,  req.params.file);
 
-    fs.readFile(calFile, 'utf8', function (err, data) {
+    fs.readFile(calFile, 'utf8', (err, data) => {
         if (err || !data)
             return rest.sendError(res, 'Gcal file read error', err);
         data = JSON.parse(data);
-        data.selectedEmail = req.body['email'];
-        exports.createAssetFileFromContent(calFile, data, function () {
+        data.selectedEmail = req.body.email;
+        exports.createAssetFileFromContent(calFile, data, () => {
             if (err)
                 return rest.sendError(res, 'Gcal file write error', err);
             else
@@ -361,10 +359,13 @@ exports.createLinkFile = function (req, res) {
 
     async.series([
         function (next) {
-            fs.writeFile(config.mediaPath + details.name + details.type, JSON.stringify(details, null, 4), 'utf8', function (err) {
+            fs.writeFile(config.mediaPath + details.name + details.type,
+                JSON.stringify(details, null, 4),
+                'utf8',
+                (err) => {
                 next(err);
             });
-        },function(next) {
+        }, function(next) {
                 require('./server-assets').storeLinkDetails(details.name+details.type,
                     'link',
                     req.body.categories,
@@ -384,17 +385,17 @@ exports.createLinkFile = function (req, res) {
  * @param res
  */
 exports.getLinkFileDetails = function (req, res) {
-    let fileToRead = req.params['file'];
+    let fileToRead = req.params.file;
     let retData = {};
 
     async.series([
         function (next) {
-            fs.readFile(config.mediaPath + fileToRead, 'utf-8', function (err, data) {
+            fs.readFile(config.mediaPath + fileToRead, 'utf-8', (err, data) => {
                 retData.data = data;
                 next(err);
             });
         }, function (next) {
-            Asset.findOne({name: fileToRead}, function (err, dbdata) {
+            Asset.findOne({name: fileToRead}, (err, dbdata) => {
                 retData.dbdata = dbdata;
                 next();
             });

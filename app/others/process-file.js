@@ -19,56 +19,60 @@ const path = require('path'),
  * @param cb
  */
 exports.processFile = function (filename, filesize, categories, cb) {
-    let errorMessages = [],
-        assetDir = path.join(config.mediaDir);
+    const assetDir = path.join(config.mediaDir),
+          src = path.join(assetDir, filename),
+          ext = path.extname(filename),
+          destName = path.basename(filename, ext) + '_c.mp4',
+          destPath = path.join(assetDir, destName),
+          random = Math.floor(Math.random() * 10000) + '_';
 
-    let src = path.join(assetDir, filename),
-        ext = path.extname(filename),
-        destName = path.basename(filename, ext) + '_c.mp4',
-        destPath = path.join(assetDir, destName),
+    let errorMessages = [],
         mediaSize = parseInt(filesize / 1000) + 'KB',
         type,
         duration,
         resolution,
-        thumbnail,
-        random = Math.floor(Math.random() * 10000) + '_';
+        thumbnail;
 
     async.series([
             function (task_cb) {
-                if (filename.match(config.imageRegex)) {
+                if (filename.match(config.imageRegex)) { // Images are processed here
                     type = 'image';
                     async.series([
+                        // Write thumbnail
                         function (img_cb) {
                             imageMagick(src)
                                 .autoOrient()
                                 .resize(64)
-                                .write(path.join(config.thumbnailDir, random+filename), function (err) {
+                                .write(path.join(config.thumbnailDir, random+filename), (err) => {
                                     console.log(' imageKick write done: ' + filename + ';error:' + err);
                                     if (err)
                                         errorMessages.push(err);
-                                    thumbnail = "/media/_thumbnails/" + random+filename;
+                                    thumbnail = "/media/_thumbnails/" + random + filename;
                                     img_cb();
                                 });
                         },
-                        function(img_cb){ // resize image
+                        // Resize image
+                        function(img_cb){
                             imageMagick(src)
                                 .autoOrient()
-                                .resize(1920,1920,'>')
-                                .write(src,function(err,op1){
+                                .resize(1920, 1920, '>')
+                                .write(src, (err) => {
                                     if(err)
-                                        console.log("Image resize error for : "+src +"  "+err);
+                                        console.log("ERROR: image resize error for : " + src + "  " + err);
                                     img_cb();
                                 });
                         },
+                        // Retrieve the file size
                         function (img_cb) {
-                            imageMagick(src).filesize(function(err,value){
+                            imageMagick(src).filesize((err, value) => {
                                 if (value)
                                     mediaSize = value;
                                 img_cb();
                             });
                         },
+                        // Retrieve the image resolution
                         function (img_cb) {
-                            imageMagick(src).size(function (err, value) {
+                            imageMagick(src).size((err, value) => {
                                 if (err)
                                     errorMessages.push(err);
                                 resolution = value;
@@ -78,7 +82,7 @@ exports.processFile = function (filename, filesize, categories, cb) {
                     ], function () {
                         task_cb();
                     });
-                } else if (filename.match(config.videoRegex)) {
+                } else if (filename.match(config.videoRegex)) { // Video is processed here
                     let filePath = src;
 
                     type = 'video';
@@ -87,14 +91,14 @@ exports.processFile = function (filename, filesize, categories, cb) {
                             probe(src, function (err, metadata) {
                                 //console.dir(metadata);
                                 if (metadata && metadata.streams) {
-                                    var vdoInfo = _.find(metadata.streams, {'codec_type': 'video'});
-                                    var formatName;
+                                    let vdoInfo = _.find(metadata.streams, {'codec_type': 'video'});
+                                    let formatName;
+
                                     if (metadata.format)
                                         formatName = metadata.format.format_name;
                                     if ((vdoInfo && vdoInfo.codec_name !== 'h264') ||
                                         (formatName.indexOf('mp4') === -1) ||
-                                        (vdoInfo && vdoInfo.pix_fmt === 'yuv422p')
-                                    ) {
+                                        (vdoInfo && vdoInfo.pix_fmt === 'yuv422p')) {
                                         new FFmpeg({source: src})
                                             .audioCodec('libfdk_aac')
                                             .videoCodec('libx264')
@@ -139,7 +143,8 @@ exports.processFile = function (filename, filesize, categories, cb) {
                                     if (metadata.format.size)
                                         mediaSize = parseInt(metadata.format.size / 1000) + 'KB';
 
-                                    var vdoInfo = _.find(metadata.streams, {'codec_type': 'video'});
+                                    let vdoInfo = _.find(metadata.streams, {'codec_type': 'video'});
+
                                     if (vdoInfo) {
                                         resolution = {
                                             width: vdoInfo.width,
@@ -173,7 +178,7 @@ exports.processFile = function (filename, filesize, categories, cb) {
                     ], function () {
                         task_cb();
                     });
-                } else if (filename.match(config.audioRegex)) {
+                } else if (filename.match(config.audioRegex)) { // Audio processed here
                     let filePath = src;
 
                     type = 'audio';
@@ -209,7 +214,7 @@ exports.processFile = function (filename, filesize, categories, cb) {
                         name: filename,
                         type: type,
                         resolution: resolution,
-                        duration: ~~duration,
+                        duration: Math.floor(duration),
                         size: mediaSize,
                         labels: categories,
                         thumbnail: thumbnail,
