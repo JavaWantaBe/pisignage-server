@@ -4,14 +4,14 @@
 
 angular.module('pisignage.services')
     .factory('castApi',function($timeout,$rootScope,$http,piUrls){  // chrome cast receiver app start
-        var DEVICE_STATE = {       //Constants of states for Chromecast device
+        let DEVICE_STATE = {       //Constants of states for Chromecast device
             'IDLE' : 0,
             'ACTIVE' : 1,
             'WARNING' : 2,
             'ERROR' : 3,
         };
 
-        var PLAYER_STATE = {      //Constants of states for CastPlayer
+        let PLAYER_STATE = {      //Constants of states for CastPlayer
             'IDLE' : 'IDLE',
             'LOADING' : 'LOADING',
             'LOADED' : 'LOADED',
@@ -22,13 +22,13 @@ angular.module('pisignage.services')
             'ERROR' : 'ERROR'
         };
 
-        var messageTxt = {"type": "serverIp",
+        let messageTxt = {"type": "serverIp",
                             "ipAddress": "http://pisignage.com",
                             "port": 80,
                             "chromecastIp": "0.0.0.0"},
             nameSpace = "urn:x-cast:com.pisignage.instasign";
 
-        var castStatus = {
+        let castStatus = {
                 devicesAvailable: false,
                 deviceState: DEVICE_STATE.IDLE
             },
@@ -44,12 +44,32 @@ angular.module('pisignage.services')
             console.log(err);
         });
 
+        function sendServerIp (session) {
+            if (!session)
+                return;
+
+            session.sendMessage(nameSpace,
+                {
+                    type: 'serverIp',
+                    ipAddress: "http://"+serverIp,
+                    port: window.location.port,
+                    chromecastIp: session.receiver.ipAddress,
+                    chromecastName: session.receiver.friendlyName
+                },
+                function(){
+                    console.log("Server IP message has been sent");
+                }, function(err){
+                    console.log("Server IP message sending error: " + err);
+                }
+            );
+        }
+
         function changeState() {
             $rootScope.$apply();
         }
 
         function stopped(session) {
-            var present = false;
+            let present = false;
             sessions[session.statusText] = null;
             for (var key in sessions) {
                 if (sessions[key] !== null) {
@@ -117,25 +137,6 @@ angular.module('pisignage.services')
             )*/
         }
 
-        function sendServerIp (session) {
-            if (!session)
-                return;
-
-            session.sendMessage(nameSpace,
-                {
-                    type: 'serverIp',
-                    ipAddress: "http://"+serverIp,
-                    port: window.location.port,
-                    chromecastIp: session.receiver.ipAddress,
-                    chromecastName: session.receiver.friendlyName
-                },
-                function(){
-                    console.log("Server IP message has been sent");
-                }, function(err){
-                    console.log("Server IP message sending error: " + err);
-                }
-            );
-        }
 
         function sessionListener(e){
             sessions[e.statusText] = e;
@@ -173,15 +174,15 @@ angular.module('pisignage.services')
                 return;
             }
 
-            var applicationID = '90DC4B3D';
+            let applicationID = '90DC4B3D';
             // auto join policy can be one of the following three
-            var autoJoinPolicy = chrome.cast.AutoJoinPolicy.ORIGIN_SCOPED;
+            let autoJoinPolicy = chrome.cast.AutoJoinPolicy.ORIGIN_SCOPED;
             //var autoJoinPolicy = chrome.cast.AutoJoinPolicy.PAGE_SCOPED;
             //var autoJoinPolicy = chrome.cast.AutoJoinPolicy.TAB_AND_ORIGIN_SCOPED;
 
             // request session
-            var sessionRequest = new chrome.cast.SessionRequest(applicationID);
-            var apiConfig = new chrome.cast.ApiConfig(sessionRequest,sessionListener,receiverListener,autoJoinPolicy);
+            let sessionRequest = new chrome.cast.SessionRequest(applicationID);
+            let apiConfig = new chrome.cast.ApiConfig(sessionRequest, sessionListener,receiverListener, autoJoinPolicy);
 
             chrome.cast.initialize(apiConfig,
                 function(){
@@ -191,7 +192,6 @@ angular.module('pisignage.services')
                 }
             );
         }
-
 
         return {
             init: castInit,

@@ -5,22 +5,55 @@
  */
 
 angular.module('piPlayers.services', [])
-    .factory('playerLoader', function ($http,piUrls,$state,assetLoader) {
-        var observerCallbacks = {};
-        var notifyObservers = function(){
+    .factory('playerLoader', function ($http, piUrls, $state, assetLoader) {
+        let observerCallbacks = {};
+        let notifyObservers = function(){
             angular.forEach(observerCallbacks, function(callback){
                 callback();
             });
         };
 
-        var getPlayers = function(cb) {
+        let playerLoader = {
+            player: {
+                players: [],
+                currentVersion: null
+            },
+
+            group: {
+                groups: [],
+                groupNames: [],
+                selectedGroup: null
+            },
+            playlist: {
+                playlists: [],
+                playlistNames: []
+            },
+
+            reload: function() {
+                loadAllModels();
+            },
+
+            getPlayers: getPlayers,
+
+            selectGroup: function(group) {
+                playerLoader.group.selectedGroup = group;
+                $state.go("home.players.players",{group: group?group._id:null});
+                //notifyObservers();
+            },
+            registerObserverCallback: function(callback,key){
+                observerCallbacks[key] = callback;
+            }
+        };
+
+        let getPlayers = function(cb) {
             if (typeof cb !== 'function')
                 cb = angular.noop;
-            var options = {params: {}};
+            let options = {params: {}};
+
             if (playerLoader.group.selectedGroup)
-                options.params['group'] = playerLoader.group.selectedGroup._id
+                options.params['group'] = playerLoader.group.selectedGroup._id;
             if (assetLoader.label.selectedPlayerLabel)
-                options.params['label'] = assetLoader.label.selectedPlayerLabel
+                options.params['label'] = assetLoader.label.selectedPlayerLabel;
 
             Object.keys(assetLoader.label.labelsCount).forEach(function (item) {
                 if (item.mode && item.mode === "players")
@@ -59,7 +92,7 @@ angular.module('piPlayers.services', [])
                                 player.lastReported = 0;    //never reported
                             player.labels.forEach(function (item) {
                                 assetLoader.label.labelsCount[item] = (assetLoader.label.labelsCount[item] || 0) + 1;
-                            })
+                            });
                         });
                     }
                     cb(!data.success);
@@ -67,38 +100,6 @@ angular.module('piPlayers.services', [])
                 .error(function (data, status) {
                     cb(true);
                 });
-        };
-
-        var playerLoader = {
-            player: {
-                players: [],
-                currentVersion: null
-            },
-
-            group: {
-                groups: [],
-                groupNames: [],
-                selectedGroup: null
-            },
-            playlist: {
-                playlists: [],
-                playlistNames: []
-            },
-
-            reload: function() {
-                loadAllModels();
-            },
-
-            getPlayers: getPlayers,
-
-            selectGroup: function(group) {
-                playerLoader.group.selectedGroup = group;
-                $state.go("home.players.players",{group: group?group._id:null});
-                //notifyObservers();
-            },
-            registerObserverCallback: function(callback,key){
-                observerCallbacks[key] = callback;
-            }
         };
 
         let loadAllModels = function() {
@@ -150,6 +151,8 @@ angular.module('piPlayers.services', [])
                 }
             );
         };
+
         loadAllModels();
+
         return playerLoader;
     });

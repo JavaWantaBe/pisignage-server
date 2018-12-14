@@ -100,7 +100,7 @@ directive('nodeimsFileUpload', ['fileUploader','piUrls', function(fileUploader, 
         compile: function compile(tElement, tAttrs, transclude) {            
             if (!tAttrs.maxFiles) {
                 tAttrs.maxFiles = 10;
-                tElement.removeAttr("multiple")
+                tElement.removeAttr("multiple");
             } else {
                 tElement.attr("multiple", "multiple");
             }        
@@ -154,7 +154,9 @@ directive('nodeimsFileUpload', ['fileUploader','piUrls', function(fileUploader, 
                         raiseError(tooBig, 'MAX_SIZE_EXCEEDED', "Files are larger than the specified max (" + scope.maxFileSizeMb + "MB)");
                         return;
                     }
+
                     scope.autoUpload = 'true'; //forcing as of now
+
                     if (scope.autoUpload && scope.autoUpload.toLowerCase() === 'true') {
                         if(attrs.allow === 'imageonly') {
                             if (!(scope.files[0].type.indexOf('image') === -1) ) {

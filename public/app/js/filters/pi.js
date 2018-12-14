@@ -10,7 +10,7 @@ angular.module('pisignage.filters', []).
 
             var end = "...";
 
-            if (text == null || text.length === 0)
+            if (text === null || text.length === 0)
                 return null;
 
             if (!angular.isString(text))
