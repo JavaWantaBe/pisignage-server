@@ -114,13 +114,12 @@ module.exports = function (app) {
     app.use('/sync_folders', express.static(config.syncDir));
     app.use('/releases', express.static(config.releasesDir));
     app.use('/licenses', express.static(config.licenseDir));
-
     app.use('/media', express.static(path.join(config.mediaDir)));
+
     app.use(express.static(path.join(config.root, 'public')));
 
     app.set('view engine', 'pug');
-    app.locals.basedir = config.viewDir; //for jade root
-
+    app.locals.basedir = config.viewDir; //for pug root
     app.set('views', config.viewDir);
 
     //app.use(logger('dev'));
@@ -137,7 +136,7 @@ module.exports = function (app) {
         //ignore range error as well
         if (err.message.indexOf('Range Not Satisfiable') >=0 )
             return res.send();
-        console.error(err.stack);
+        logger.error(err.stack);
         res.status(500).render('500');
     });
 

@@ -11,10 +11,6 @@ const path = require('path'),
       logger = require('node-logger').createLogger(),
       config = require(path.join(__dirname, '/config/config'));
 
-// Bootstrap models
-const modelsPath = path.join(__dirname, 'app/models');
-const mongoose = require('mongoose');
-
 // Start server
 let app = express();
 let server = null;
@@ -30,24 +26,26 @@ let ioNew = socketio(server,{
     maxHttpBufferSize: 10e7
 });
 
-
 /**
  * System readiness check
  */
 require('./app/others/system-check')();
 
+// Bootstrap models
+const modelsPath = path.join(__dirname, 'app/models');
+let mongoose = require('mongoose');
+
 /**
  * Connect to database
  */
-mongoose.connect(config.mongo.uri, config.mongo.options).then(
-    () => {
-        logger.info('attached to database');
-    },
-    err => {
-        logger.error('unable to attach to database');
-        process.exit(1);
-    }
-);
+mongoose.connect(config.mongo.uri, config.mongo.options);
+mongoose.Promise = global.Promise;
+
+let db = mongoose.connection;
+
+db.on('error', () => {
+    logger.error('Could not connect to database');
+});
 
 fs.readdirSync(modelsPath).forEach(file => {
     require(modelsPath + '/' + file);
